@@ -128,30 +128,35 @@
       /* ===============================
          כפתור "כל ישראל" – עובד בוודאות
          =============================== */
-      const homeControl = L.control({ position: 'topright' });
+      // כפתור חזרה לתצוגת כל ישראל – מתחת לזום
+const homeControl = L.control({ position: 'topleft' });
 
-      homeControl.onAdd = function () {
-        const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        const a = L.DomUtil.create('a', '', div);
+homeControl.onAdd = function () {
+  const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
 
-        a.href = '#';
-        a.innerHTML = 'כל ישראל';
-        a.title = 'חזרה לתצוגת כל ישראל';
-        a.style.padding = '0 10px';
-        a.style.lineHeight = '30px';
-        a.style.fontWeight = '700';
+  const btn = L.DomUtil.create('a', '', container);
+  btn.href = '#';
+  btn.title = 'חזרה לכל ישראל';
 
-        L.DomEvent.disableClickPropagation(div);
-        L.DomEvent.on(a, 'click', (e) => {
-          L.DomEvent.preventDefault(e);
-          map.fitBounds(ISRAEL_BOUNDS, { padding: [20, 20] });
-          clearNotes();
-        });
+  // אייקון חץ חזרה (נראה טוב בכל מערכת)
+  btn.innerHTML = '⤺';
+  btn.style.fontSize = '20px';
+  btn.style.lineHeight = '26px';
+  btn.style.textAlign = 'center';
 
-        return div;
-      };
+  // למנוע גרירת מפה / זום בלחיצה
+  L.DomEvent.disableClickPropagation(container);
+  L.DomEvent.on(btn, 'click', (e) => {
+    L.DomEvent.preventDefault(e);
+    map.fitBounds(ISRAEL_BOUNDS, { padding: [20, 20] });
+    clearNotes();
+  });
 
-      homeControl.addTo(map);
+  return container;
+};
+
+homeControl.addTo(map);
+
 
     });
   </script>
