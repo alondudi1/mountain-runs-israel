@@ -47,13 +47,6 @@
       #sidebar { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #ddd; }
       #map { height: 60vh; }
     }
-
-    .route-item.active {
-      background: #e6f0ff;
-      font-weight: 700;
-      border-right: 4px solid #3b82f6; /* פס הדגשה */
-    }
-
   </style>
 </head>
 
@@ -172,30 +165,19 @@
     function selectRoute(routeId, doFit = false) {
       const line = routeMap[routeId];
       if (!line) return;
-    
-      // ניקוי הדגשה קודמת במפה
+
       if (selectedRouteId && routeMap[selectedRouteId]) {
         routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
       }
-    
-      // ניקוי הדגשה קודמת ברשימה
-      document.querySelectorAll('.route-item.active')
-        .forEach(el => el.classList.remove('active'));
-    
-      // הדגשת הנבחר
+
       selectedRouteId = routeId;
       line.setStyle(SELECTED_STYLE);
       line.bringToFront();
-    
-      // הדגשה ברשימה
-      const item = document.querySelector(`.route-item[data-id="${routeId}"]`);
-      if (item) item.classList.add('active');
-    
+
       if (doFit) {
         map.fitBounds(line.getBounds(), { padding: [30, 30] });
       }
     }
-
 
     for (const r of routes) {
       try {
@@ -247,14 +229,12 @@
       listEl.appendChild(title);
 
       byRegion[region].forEach(r => {
-      const item = document.createElement('div');
-      item.className = 'route-item';
-      item.dataset.id = r.id;
-      item.textContent = r.name;
-      item.onclick = () => selectRoute(r.id, true);
-      listEl.appendChild(item);
-    });
-
+        const item = document.createElement('div');
+        item.className = 'route-item';
+        item.textContent = r.name;
+        item.onclick = () => selectRoute(r.id, true);
+        listEl.appendChild(item);
+      });
     });
   });
   </script>
