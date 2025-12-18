@@ -156,12 +156,13 @@ homeControl.addTo(map);
       routes = await loadJSON('data/routes.json');
     } catch (e) {
       statusEl.textContent = e.message;
-      return;
-    }
-    } catch (e) {
+       } catch (e) {
       console.warn('Route draw failed:', r.id, r.geometry_file, e);
     }
 
+      return;
+    }
+   
     statusEl.textContent = `נטענו ${routes.length} מסלולים. טוען גאומטריות…`;
 
     // ציור מסלולים
