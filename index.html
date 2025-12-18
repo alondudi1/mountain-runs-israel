@@ -86,15 +86,17 @@ window.addEventListener('load', async () => {
   }
 
   let routesGeo, notesGeo;
+ let routes, notesGeo;
+
   try {
-    // בלי "./" כדי למנוע בעיות יחסיות נדירות
-    routesGeo = await loadJSON('data/routes.geojson');
-    notesGeo  = await loadJSON('data/notes.geojson');
+    routes   = await loadJSON('data/routes.json');   // 👈 חדש
+    notesGeo = await loadJSON('data/notes.geojson'); // נשאר אותו דבר
   } catch (e) {
     statusEl.className = 'status err';
     statusEl.textContent = e.message;
-    return; // בלי נתונים אין מה להמשיך
+    return;
   }
+
 
   const notesByRoute = {};
   (notesGeo.features || []).forEach(f=>{
