@@ -247,13 +247,14 @@
       listEl.appendChild(title);
 
       byRegion[region].forEach(r => {
-        const item = document.createElement('div');
-        item.className = 'route-item';
-        item.dataset.id = r.id;   // ← זה חשוב
-        item.textContent = r.name;
-        item.onclick = () => selectRoute(r.id, true);
+      const item = document.createElement('div');
+      item.className = 'route-item';
+      item.dataset.id = r.id;
+      item.textContent = r.name;
+      item.onclick = () => selectRoute(r.id, true);
+      listEl.appendChild(item);
+    });
 
-      });
     });
   });
   </script>
