@@ -36,3 +36,82 @@
 
 <script>
   /* ===============================
+     יצירת המפה
+     =============================== */
+  const map = L.map('map').setView([31.8, 35.1], 8);
+
+  /* ===============================
+     שכבות בסיס
+     =============================== */
+
+  // מפה רגילה
+  const osm = L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }
+  );
+
+  // תצלום לוויין
+  const esriSat = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      maxZoom: 19,
+      attribution: 'Tiles &copy; Esri'
+    }
+  );
+
+  // ברירת מחדל
+  osm.addTo(map);
+
+  // מתג בחירה
+  L.control.layers(
+    {
+      'מפה': osm,
+      'לוויין': esriSat
+    },
+    null,
+    { collapsed: false }
+  ).addTo(map);
+
+  /* ===============================
+     מסלול לדוגמה – כרמל
+     =============================== */
+  const route = L.polyline(
+    [
+      [32.735, 35.014],
+      [32.740, 35.032],
+      [32.733, 35.050]
+    ],
+    {
+      color: 'red',
+      weight: 4
+    }
+  ).addTo(map);
+
+  route.bindPopup(`
+    <div class="popup-title">כרמל – רכס זורם</div>
+    18 ק״מ | 750 מ׳ טיפוס<br>
+    ריצת רכס קלאסית עם קטעים טכניים.
+  `);
+
+  /* ===============================
+     הערה על המסלול
+     =============================== */
+  L.marker([32.740, 35.032])
+    .addTo(map)
+    .bindPopup(`
+      <div class="popup-title">קטע טכני</div>
+      כאן לא לרדוף אחרי קצב – לשמור רגליים לעלייה הבאה.
+    `);
+
+  /* ===============================
+     התאמת המפה למסלול
+     =============================== */
+  map.fitBounds(route.getBounds());
+
+</script>
+
+</body>
+</html>
