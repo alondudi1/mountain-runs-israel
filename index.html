@@ -4,37 +4,49 @@
   <meta charset="utf-8" />
   <title>ריצות הרים בישראל</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100vh; width: 100vw; }
+
     .popup-title { font-weight: bold; margin-bottom: 6px; }
-    .leaflet-tooltip.route-label{
+
+    .leaflet-tooltip.route-label {
       background: rgba(255,255,255,0.9);
       border: 1px solid rgba(0,0,0,0.2);
       padding: 4px 6px;
       border-radius: 6px;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.15);
       font-size: 13px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.15);
     }
   </style>
 </head>
+
 <body>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <script>
-    const ISRAEL_BOUNDS = [[29.4, 34.2], [33.3, 35.9]];
-
     window.addEventListener('load', async () => {
-      const map = L.map('map');
-      map.fitBounds([[29.4, 34.2], [33.3, 35.9]]); // פתיחה על כל ישראל
 
-      // בסיס: מפה/לוויין
-      const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      });
+      /* ===============================
+         הגדרות כלליות
+         =============================== */
+      const ISRAEL_BOUNDS = [[29.4, 34.2], [33.3, 35.9]];
+
+      const map = L.map('map');
+      map.fitBounds(ISRAEL_BOUNDS);
+
+      /* ===============================
+         שכבות בסיס
+         =============================== */
+      const osm = L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
+      );
 
       const esriSat = L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -43,14 +55,18 @@
 
       osm.addTo(map);
 
-      // שכבות תוכן
+      /* ===============================
+         שכבות תוכן
+         =============================== */
       const routesLayer = L.layerGroup().addTo(map);
-      const notesLayer  = L.layerGroup(); // לא מוצג בהתחלה
+      const notesLayer  = L.layerGroup();
 
-      // טעינת נתונים
+      /* ===============================
+         טעינת נתונים
+         =============================== */
       async function loadJSON(path) {
-        const res = await fetch(path, { cache: "no-store" });
-        if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
+        const res = await fetch(path, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`Failed to load ${path}`);
         return res.json();
       }
 
@@ -58,13 +74,11 @@
       const notesGeo  = await loadJSON('./data/notes.geojson');
 
       // אינדקס הערות לפי route_id
-      const notesByRouteId = new Map();
-      (notesGeo.features || []).forEach(f => {
-        const p = f.properties || {};
-        const rid = p.route_id;
-        if (!rid) return;
-        if (!notesByRouteId.has(rid)) notesByRouteId.set(rid, []);
-        notesByRouteId.get(rid).push(f);
+      const notesByRoute = new Map();
+      notesGeo.features.forEach(f => {
+        const rid = f.properties.route_id;
+        if (!notesByRoute.has(rid)) notesByRoute.set(rid, []);
+        notesByRoute.get(rid).push(f);
       });
 
       function clearNotes() {
@@ -72,58 +86,72 @@
         if (map.hasLayer(notesLayer)) map.removeLayer(notesLayer);
       }
 
-      function showNotesFor(routeId) {
-        notesLayer.clearLayers();
-        const arr = notesByRouteId.get(routeId) || [];
+      function showNotes(routeId) {
+        clearNotes();
+        const arr = notesByRoute.get(routeId) || [];
         arr.forEach(f => {
-          const p = f.properties || {};
-          const [lon, lat] = f.geometry.coordinates; // Point
-          L.marker([lat, lon]).addTo(notesLayer).bindPopup(`
-            <div class="popup-title">${p.title || "הערה"}</div>
-            ${p.text || ""}
-          `);
+          const [lon, lat] = f.geometry.coordinates;
+          const p = f.properties;
+          L.marker([lat, lon]).addTo(notesLayer).bindPopup(
+            `<div class="popup-title">${p.title}</div>${p.text}`
+          );
         });
-
-        if (arr.length > 0 && !map.hasLayer(notesLayer)) notesLayer.addTo(map);
+        if (arr.length) notesLayer.addTo(map);
       }
-      function resetToIsrael() {
-  map.fitBounds(ISRAEL_BOUNDS, { padding: [20, 20] });
-  clearNotes();
-}
 
-      // ציור מסלולים (בהתחלה רק שמות)
-      (routesGeo.features || []).forEach(f => {
-        const p = f.properties || {};
-        const routeId = p.id;
-        const name = p.name || "מסלול";
-
-        // LineString: coordinates = [[lon,lat],...]
-        const latlngs = (f.geometry.coordinates || []).map(([lon, lat]) => [lat, lon]);
+      /* ===============================
+         ציור מסלולים
+         =============================== */
+      routesGeo.features.forEach(f => {
+        const p = f.properties;
+        const latlngs = f.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
 
         const line = L.polyline(latlngs, { weight: 4 }).addTo(routesLayer);
-        line.bindTooltip(name, { sticky: true, className: 'route-label' });
+        line.bindTooltip(p.name, { sticky: true, className: 'route-label' });
 
         line.on('click', () => {
           map.fitBounds(line.getBounds(), { padding: [30, 30] });
-          showNotesFor(routeId);
-          line.bindPopup(`<div class="popup-title">${name}</div>${p.region ? p.region : ""}`).openPopup();
+          showNotes(p.id);
+          line.bindPopup(`<div class="popup-title">${p.name}</div>${p.region || ''}`).openPopup();
         });
       });
 
-      // מתג שכבות
+      /* ===============================
+         בקרות שכבות
+         =============================== */
       L.control.layers(
-        { "מפה": osm, "לוויין": esriSat },
-        { "מסלולים": routesLayer, "הערות למסלול נבחר": notesLayer },
+        { 'מפה': osm, 'לוויין': esriSat },
+        { 'מסלולים': routesLayer, 'הערות למסלול נבחר': notesLayer },
         { collapsed: false }
       ).addTo(map);
 
-      // קליק על רקע המפה => מסתיר הערות (אופציונלי)
-      map.on('click', () => { if (!map._popup) clearNotes(); });
+      /* ===============================
+         כפתור "כל ישראל" – עובד בוודאות
+         =============================== */
+      const homeControl = L.control({ position: 'topright' });
 
-      function resetToIsrael() {
-  map.fitBounds(ISRAEL_BOUNDS, { padding: [20, 20] });
-  clearNotes();
-}
+      homeControl.onAdd = function () {
+        const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        const a = L.DomUtil.create('a', '', div);
+
+        a.href = '#';
+        a.innerHTML = 'כל ישראל';
+        a.title = 'חזרה לתצוגת כל ישראל';
+        a.style.padding = '0 10px';
+        a.style.lineHeight = '30px';
+        a.style.fontWeight = '700';
+
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.on(a, 'click', (e) => {
+          L.DomEvent.preventDefault(e);
+          map.fitBounds(ISRAEL_BOUNDS, { padding: [20, 20] });
+          clearNotes();
+        });
+
+        return div;
+      };
+
+      homeControl.addTo(map);
 
     });
   </script>
