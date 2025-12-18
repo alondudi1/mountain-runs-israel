@@ -14,13 +14,15 @@
     #app { display: flex; height: 100vh; flex-direction: row-reverse; } /* סיידבר מימין */
     #map { flex: 1; }
     #sidebar {
-      width: 320px;
-      border-left: 1px solid #ddd;
-      padding: 10px;
-      overflow-y: auto;
-      background: #fff;
-      box-sizing: border-box;
-    }
+        width: 320px;
+        border-left: 1px solid #ddd;
+        padding: 10px;
+        overflow-y: auto;
+        background: #fff;
+        box-sizing: border-box;
+        position: relative;
+        z-index: 1000;
+  }
 
     .region-title { font-weight: 800; margin: 14px 0 6px; opacity: .85; }
     .route-item {
