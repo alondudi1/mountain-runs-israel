@@ -36,6 +36,10 @@
     .leaflet-control-layers {
       margin-top: 0; /* gap כבר מטפל בריווח */
     }
+    .leaflet-control-layers {
+      width: auto;
+    }
+
 
     .leaflet-tooltip.route-label {
       background: #fff;
@@ -105,27 +109,36 @@
 
     // כפתור ↺ חזרה לתצוגת כל ישראל (מתחת לזום, ליד הבורר)
     const homeControl = L.control({ position: 'topleft' });
-    homeControl.onAdd = function () {
-      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-      const btn = L.DomUtil.create('a', '', container);
-      btn.href = '#';
-      btn.title = 'חזרה לכל ישראל';
-      btn.innerHTML = '↺';
-      btn.style.fontSize = '18px';
-      btn.style.lineHeight = '30px';
-      btn.style.textAlign = 'center';
-      btn.style.width = '30px';
-      btn.style.height = '30px';
+homeControl.onAdd = function () {
+  const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
 
-      L.DomEvent.disableClickPropagation(container);
-      L.DomEvent.on(btn, 'click', (e) => {
-        L.DomEvent.preventDefault(e);
-        map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
-      });
+  const btn = L.DomUtil.create('a', '', container);
+  btn.href = '#';
+  btn.title = 'חזרה לכל ישראל';
+  btn.innerHTML = '↺';
+  btn.style.fontSize = '18px';
+  btn.style.lineHeight = '30px';
+  btn.style.textAlign = 'center';
+  btn.style.width = '30px';
+  btn.style.height = '30px';
 
-      return container;
-    };
-    homeControl.addTo(map);
+  L.DomEvent.disableClickPropagation(container);
+  L.DomEvent.on(btn, 'click', (e) => {
+    L.DomEvent.preventDefault(e);
+    map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+  });
+
+  // ⬇️ זה הטריק: להכניס את הכפתור מתחת לזום בתוך אותו "bar"
+  setTimeout(() => {
+    const zoomBar = document.querySelector('.leaflet-control-zoom');
+    if (zoomBar && zoomBar.parentElement) {
+      zoomBar.parentElement.insertBefore(container, zoomBar.nextSibling);
+    }
+  }, 0);
+
+  return L.DomUtil.create('div'); // מחזירים div ריק כי כבר הכנסנו את הכפתור ידנית
+};
+homeControl.addTo(map);
 
     // טעינת JSON
     async function loadJSON(path) {
