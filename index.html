@@ -185,15 +185,46 @@ homeControl.addTo(map);
 
         if (latlngs.length < 2) continue;
 
-        const line = L.polyline(latlngs, { weight: 4 }).addTo(routesLayer);
-        line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
+        // סגנונות
+const DEFAULT_STYLE  = { weight: 4, opacity: 0.85 };
+const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
 
-        routeMap[r.id] = line;
+      const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
+      line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
+      
+      routeMap[r.id] = line;
+      
+      // שמור גם נקודות כדי לעשות fitBounds גם מהתפריט אם צריך
+      line.__routeId = r.id;
+      
+      line.on('click', () => {
+        selectRoute(r.id, true);
+      });
 
-        line.on('click', () => {
+      } 
+      let selectedRouteId = null;
+
+      function selectRoute(routeId, doFit = false) {
+        if (!routeMap[routeId]) return;
+      
+        // החזרת הקודם לברירת מחדל
+        if (selectedRouteId && routeMap[selectedRouteId]) {
+          routeMap[selectedRouteId].setStyle({ weight: 4, opacity: 0.85 });
+        }
+      
+        // הדגשת הנבחר
+        selectedRouteId = routeId;
+        const line = routeMap[routeId];
+        line.setStyle({ weight: 7, opacity: 1.0 });
+        line.bringToFront();
+      
+        if (doFit) {
           map.fitBounds(line.getBounds(), { padding: [30, 30] });
-        });
-      } catch (e) {
+        }
+      }
+
+      
+      catch (e) {
         console.warn('Route draw failed:', r.id, e.message);
       }
     }
@@ -219,9 +250,9 @@ homeControl.addTo(map);
         item.className = 'route-item';
         item.textContent = r.name;
         item.onclick = () => {
-          const line = routeMap[r.id];
-          if (line) map.fitBounds(line.getBounds(), { padding: [30, 30] });
+          selectRoute(r.id, true);
         };
+
         listEl.appendChild(item);
       });
     });
