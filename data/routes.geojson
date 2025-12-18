@@ -1,0 +1,37 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "carmel_ridge_18k",
+        "name": "כרמל – רכס זורם (18 ק״מ)",
+        "region": "כרמל"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [35.014, 32.735],
+          [35.032, 32.740],
+          [35.050, 32.733]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "jerusalem_ridge_22k",
+        "name": "הרי ירושלים – רכס שבור (22 ק״מ)",
+        "region": "הרי ירושלים"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [35.120, 31.780],
+          [35.150, 31.790],
+          [35.175, 31.770]
+        ]
+      }
+    }
+  ]
+}
