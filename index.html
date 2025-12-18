@@ -55,7 +55,6 @@
 <div id="app">
   <div id="map"></div>
   <div id="sidebar">
-    <button class="home-btn" id="homeBtn">↩ חזרה לכל ישראל</button>
     <div id="routesList"></div>
     <div class="status" id="status">טוען…</div>
   </div>
@@ -72,6 +71,32 @@
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
+  const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
+
+  const homeControl = L.control({ position: 'topleft' });
+  homeControl.onAdd = function () {
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    const btn = L.DomUtil.create('a', '', container);
+  
+    btn.href = '#';
+    btn.title = 'חזרה לכל ישראל';
+    btn.innerHTML = '↺';           // חץ מעוגל
+    btn.style.fontSize = '18px';
+    btn.style.lineHeight = '30px';
+    btn.style.textAlign = 'center';
+    btn.style.width = '30px';
+    btn.style.height = '30px';
+  
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(btn, 'click', (e) => {
+      L.DomEvent.preventDefault(e);
+      map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+    });
+  
+    return container;
+};
+homeControl.addTo(map);
+
   const routesLayer = L.layerGroup().addTo(map);
 
   /* ========= עזרים ========= */
@@ -87,7 +112,6 @@
 
   const statusEl = document.getElementById('status');
   const listEl   = document.getElementById('routesList');
-  const homeBtn  = document.getElementById('homeBtn');
 
   /* ========= טעינת מסלולים ========= */
   let routes;
@@ -158,11 +182,7 @@
     const line = routeMap[id];
     if (!line) return;
     map.fitBounds(line.getBounds(), { padding: [30, 30] });
-  }
-
-  homeBtn.onclick = () => {
-    map.setView([31.8, 35.0], 8);
-  };
+ ;
 
 })();
 </script>
