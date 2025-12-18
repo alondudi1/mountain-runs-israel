@@ -85,6 +85,11 @@ window.addEventListener('load', async () => {
     return res.json();
   }
 
+  async function loadGeometry(relPath) {
+    return loadJSON('data/' + relPath);
+  }
+
+
   let routesGeo, notesGeo;
  let routes, notesGeo;
 
@@ -140,24 +145,33 @@ window.addEventListener('load', async () => {
     return null;
   }
 
-  const routeMap = {}; // id->polyline
-  const routes = (routesGeo.features || []).map(f=>{
-    const p = f.properties || {};
-    const id = String(p.id || '').trim();
-    const name = String(p.name || 'מסלול').trim();
-    const region = String(p.region || 'לא משויך').trim();
-    const distance_km = (p.distance_km != null && p.distance_km !== '') ? Number(p.distance_km) : null;
+  const routeMap = {}; // id -> polyline
 
-    const latlngs = geometryToLatLngs(f.geometry);
-    if(!id || !latlngs || latlngs.length < 2) return null;
+// בדיקה: צייר רק את המסלול הראשון
+const r = routes[0];
+const geom = await loadGeometry(r.geometry_file);
 
-    const line = L.polyline(latlngs,{weight:4}).addTo(routesLayer);
-    line.bindTooltip(name,{sticky:true,className:'route-label'});
-    routeMap[id] = line;
-    line.on('click',()=>focusRoute(id));
+let latlngs = [];
 
-    return { id, name, region, distance_km };
-  }).filter(Boolean);
+if (geom.type === 'LineString') {
+  latlngs = (geom.coordinates || []).map(([lon, lat]) => [lat, lon]);
+} else if (geom.type === 'MultiLineString') {
+  (geom.coordinates || []).forEach(line =>
+    (line || []).forEach(([lon, lat]) => latlngs.push([lat, lon]))
+  );
+} else {
+  throw new Error('Unsupported geometry type: ' + geom.type);
+}
+
+if (latlngs.length < 2) throw new Error('Not enough coordinates for ' + r.id);
+
+const line = L.polyline(latlngs, { weight: 4 }).addTo(routesLayer);
+line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
+
+routeMap[r.id] = line;
+
+// קליק על הקו → מיקוד + הערות
+line.on('click', () => focusRoute(r.id));
 
   statusEl.className = 'status ok';
   statusEl.textContent = `נטענו ${routes.length} מסלולים, ${notesGeo.features?.length || 0} הערות.`;
