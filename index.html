@@ -104,6 +104,17 @@
       <div class="sidebar-header">
         <div class="sidebar-title">מסלולים</div>
         <input id="search" class="sidebar-search" placeholder="חיפוש לפי שם / אזור…" />
+        <div style="margin-top:10px; display:flex; gap:12px; align-items:center; font-size:13px;">
+          <label style="display:flex; gap:6px; align-items:center; cursor:pointer;">
+            <input type="radio" name="viewMode" value="region" checked>
+            לפי אזורים
+          </label>
+          <label style="display:flex; gap:6px; align-items:center; cursor:pointer;">
+            <input type="radio" name="viewMode" value="distance">
+            לפי אורך
+          </label>
+        </div>
+
       </div>
       <div id="routes" class="routes"></div>
     </aside>
@@ -179,10 +190,13 @@
       const routeFeatures = (routesGeo.features || []).map(f => ({
         id: f?.properties?.id,
         name: f?.properties?.name || 'מסלול',
-        region: f?.properties?.region || '',
+        region: f?.properties?.region || 'לא משויך',
+        distance_km: Number(f?.properties?.distance_km ?? NaN),
+        elev_gain_m: Number(f?.properties?.elev_gain_m ?? NaN),
         geometry: f.geometry,
         raw: f
       })).filter(r => r.id && r.geometry && r.geometry.type === 'LineString');
+
 
       function focusRoute(routeId) {
         const line = routeLayersById.get(routeId);
@@ -246,32 +260,80 @@
         });
       }
 
-      function renderList(filterText = '') {
-        const q = filterText.trim().toLowerCase();
-        routesEl.innerHTML = '';
+      let viewMode = 'region'; // ברירת מחדל
 
-        routeFeatures
-          .filter(r => {
-            if (!q) return true;
-            return (r.name.toLowerCase().includes(q) || r.region.toLowerCase().includes(q));
-          })
-          .forEach(r => {
-            const item = document.createElement('div');
-            item.className = 'route-item';
-            item.dataset.routeId = r.id;
-            if (r.id === activeRouteId) item.classList.add('active');
+function renderList(filterText = '') {
+  const q = filterText.trim().toLowerCase();
+  routesEl.innerHTML = '';
 
-            item.innerHTML = `
-              <div class="route-name">${r.name}</div>
-              <div class="route-meta">${r.region ? `אזור: ${r.region}` : ''}</div>
-            `;
+  const filtered = routeFeatures.filter(r => {
+    if (!q) return true;
+    return (
+      r.name.toLowerCase().includes(q) ||
+      r.region.toLowerCase().includes(q)
+    );
+  });
 
-            item.addEventListener('click', () => focusRoute(r.id));
-            routesEl.appendChild(item);
-          });
-      }
+  const makeItem = (r) => {
+    const item = document.createElement('div');
+    item.className = 'route-item';
+    item.dataset.routeId = r.id;
+    if (r.id === activeRouteId) item.classList.add('active');
+
+    const dist = Number.isFinite(r.distance_km) ? `${r.distance_km} ק״מ` : '';
+    const elev = Number.isFinite(r.elev_gain_m) ? `${r.elev_gain_m} מ׳` : '';
+    const metaBits = [r.region ? `אזור: ${r.region}` : '', dist, elev].filter(Boolean).join(' | ');
+
+    item.innerHTML = `
+      <div class="route-name">${r.name}</div>
+      <div class="route-meta">${metaBits}</div>
+    `;
+    item.addEventListener('click', () => focusRoute(r.id));
+    return item;
+  };
+
+  if (viewMode === 'region') {
+    // קיבוץ לפי אזור (ברירת מחדל)
+    const groups = new Map();
+    filtered.forEach(r => {
+      if (!groups.has(r.region)) groups.set(r.region, []);
+      groups.get(r.region).push(r);
+    });
+
+    // סדר אזורים אלפביתי (אפשר לשנות לסדר מותאם)
+    [...groups.keys()].sort((a,b)=>a.localeCompare(b,'he')).forEach(region => {
+      const h = document.createElement('div');
+      h.style.margin = '14px 6px 6px';
+      h.style.fontWeight = '800';
+      h.style.opacity = '0.85';
+      h.textContent = region;
+      routesEl.appendChild(h);
+
+      groups.get(region).forEach(r => routesEl.appendChild(makeItem(r)));
+    });
+
+  } else {
+    // מיון לפי אורך (עולה) – מי שאין לו distance נדחף לסוף
+    filtered
+      .slice()
+      .sort((a,b) => {
+        const ad = Number.isFinite(a.distance_km) ? a.distance_km : 1e9;
+        const bd = Number.isFinite(b.distance_km) ? b.distance_km : 1e9;
+        return ad - bd;
+      })
+      .forEach(r => routesEl.appendChild(makeItem(r)));
+  }
+}
+
 
       renderList();
+      document.querySelectorAll('input[name="viewMode"]').forEach(r => {
+  r.addEventListener('change', () => {
+    viewMode = document.querySelector('input[name="viewMode"]:checked').value;
+    renderList(searchEl.value);
+  });
+});
+
 
       searchEl.addEventListener('input', () => renderList(searchEl.value));
     });
