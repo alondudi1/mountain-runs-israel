@@ -6,10 +6,9 @@
       "properties": {
         "id": "carmel_ridge_18k",
         "name": "כרמל – רכס זורם (18 ק״מ)",
-        "region": "כרמל"
+        "region": "כרמל",
         "distance_km": 18,
         "elev_gain_m": 750
-
       },
       "geometry": {
         "type": "LineString",
@@ -25,10 +24,9 @@
       "properties": {
         "id": "jerusalem_ridge_22k",
         "name": "הרי ירושלים – רכס שבור (22 ק״מ)",
-        "region": "הרי ירושלים"
+        "region": "הרי ירושלים",
         "distance_km": 22,
-        "elev_gain_m": 750
-
+        "elev_gain_m": 900
       },
       "geometry": {
         "type": "LineString",
