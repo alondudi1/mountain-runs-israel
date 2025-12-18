@@ -49,27 +49,30 @@
       ).addTo(map);
 
       // מסלול לדוגמה
-      const route = L.polyline(
-        [
-          [32.735, 35.014],
-          [32.740, 35.032],
-          [32.733, 35.050]
-        ],
-        { color: 'red', weight: 4 }
-      ).addTo(map);
+     <script>
+  window.addEventListener('load', () => {
 
-      route.bindPopup(`
-        <div class="popup-title">כרמל – רכס זורם</div>
-        18 ק״מ | 750 מ׳ טיפוס<br>
-        ריצת רכס קלאסית עם קטעים טכניים.
-      `);
+    const map = L.map('map');
+    map.fitBounds([[29.4, 34.2], [33.3, 35.9]]);
 
-      L.marker([32.740, 35.032])
-        .addTo(map)
-        .bindPopup(`
-          <div class="popup-title">קטע טכני</div>
-          כאן לא לרדוף אחרי קצב – לשמור רגליים לעלייה הבאה.
-        `);
+    // שכבות בסיס (OSM / לוויין)
+    ...
+
+    /* 👇 כאן מדביקים את הקוד החדש */
+    const routesLayer = L.layerGroup().addTo(map);
+    const notesLayer  = L.layerGroup();
+
+    const ROUTES = [ ... ];
+    const NOTES  = [ ... ];
+
+    function showNotesFor(routeId) { ... }
+
+    ROUTES.forEach(r => { ... });
+
+    L.control.layers(...).addTo(map);
+
+  });
+</script>
 
     });
   </script>
