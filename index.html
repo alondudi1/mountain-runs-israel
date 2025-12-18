@@ -9,7 +9,71 @@
 
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
-    #map { height: 100vh; width: 100vw; }
+
+    /* Layout */
+    .app {
+      height: 100vh;
+      display: flex;
+      direction: rtl;
+    }
+    .sidebar {
+      width: 320px;
+      border-left: 1px solid rgba(0,0,0,0.1);
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 12px 12px 8px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .sidebar-title {
+      font-weight: 800;
+      font-size: 16px;
+      margin: 0 0 8px;
+    }
+    .sidebar-search {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.15);
+      outline: none;
+    }
+    .routes {
+      overflow: auto;
+      padding: 8px;
+      flex: 1;
+    }
+    .route-item {
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 12px;
+      padding: 10px 10px;
+      margin: 8px 0;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s, border-color .15s;
+    }
+    .route-item:hover {
+      background: rgba(0,0,0,0.03);
+    }
+    .route-item.active {
+      border-color: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.05);
+    }
+    .route-name {
+      font-weight: 800;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .route-meta {
+      font-size: 12px;
+      opacity: 0.75;
+      line-height: 1.4;
+    }
+
+    /* Map */
+    #map { flex: 1; }
 
     .popup-title { font-weight: bold; margin-bottom: 6px; }
 
@@ -21,32 +85,46 @@
       font-size: 13px;
       box-shadow: 0 1px 6px rgba(0,0,0,0.15);
     }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .sidebar { width: 45vw; }
+    }
+    @media (max-width: 650px) {
+      .app { flex-direction: column; }
+      .sidebar { width: 100%; height: 40vh; border-left: none; border-bottom: 1px solid rgba(0,0,0,0.1); }
+      #map { height: 60vh; }
+    }
   </style>
 </head>
 
 <body>
-  <div id="map"></div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">מסלולים</div>
+        <input id="search" class="sidebar-search" placeholder="חיפוש לפי שם / אזור…" />
+      </div>
+      <div id="routes" class="routes"></div>
+    </aside>
+
+    <div id="map"></div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
     window.addEventListener('load', async () => {
-
-      /* ===============================
-         הגדרות כלליות
-         =============================== */
       const ISRAEL_BOUNDS = [[29.4, 34.2], [33.3, 35.9]];
 
       const map = L.map('map');
       map.fitBounds(ISRAEL_BOUNDS);
 
-      /* ===============================
-         שכבות בסיס
-         =============================== */
-      const osm = L.tileLayer(
-        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }
-      );
+      // Base layers
+      const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      });
 
       const esriSat = L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -55,15 +133,11 @@
 
       osm.addTo(map);
 
-      /* ===============================
-         שכבות תוכן
-         =============================== */
+      // Content layers
       const routesLayer = L.layerGroup().addTo(map);
       const notesLayer  = L.layerGroup();
 
-      /* ===============================
-         טעינת נתונים
-         =============================== */
+      // Load GeoJSON
       async function loadJSON(path) {
         const res = await fetch(path, { cache: 'no-store' });
         if (!res.ok) throw new Error(`Failed to load ${path}`);
@@ -73,10 +147,11 @@
       const routesGeo = await loadJSON('./data/routes.geojson');
       const notesGeo  = await loadJSON('./data/notes.geojson');
 
-      // אינדקס הערות לפי route_id
+      // Index notes by route_id
       const notesByRoute = new Map();
-      notesGeo.features.forEach(f => {
-        const rid = f.properties.route_id;
+      (notesGeo.features || []).forEach(f => {
+        const rid = f?.properties?.route_id;
+        if (!rid) return;
         if (!notesByRoute.has(rid)) notesByRoute.set(rid, []);
         notesByRoute.get(rid).push(f);
       });
@@ -91,74 +166,114 @@
         const arr = notesByRoute.get(routeId) || [];
         arr.forEach(f => {
           const [lon, lat] = f.geometry.coordinates;
-          const p = f.properties;
+          const p = f.properties || {};
           L.marker([lat, lon]).addTo(notesLayer).bindPopup(
-            `<div class="popup-title">${p.title}</div>${p.text}`
+            `<div class="popup-title">${p.title || 'הערה'}</div>${p.text || ''}`
           );
         });
         if (arr.length) notesLayer.addTo(map);
       }
 
-      /* ===============================
-         ציור מסלולים
-         =============================== */
-      routesGeo.features.forEach(f => {
-        const p = f.properties;
-        const latlngs = f.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+      // Build routes + keep references
+      const routeLayersById = new Map();
+      const routeFeatures = (routesGeo.features || []).map(f => ({
+        id: f?.properties?.id,
+        name: f?.properties?.name || 'מסלול',
+        region: f?.properties?.region || '',
+        geometry: f.geometry,
+        raw: f
+      })).filter(r => r.id && r.geometry && r.geometry.type === 'LineString');
 
+      function focusRoute(routeId) {
+        const line = routeLayersById.get(routeId);
+        if (!line) return;
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
+        showNotes(routeId);
+        highlightRouteInList(routeId);
+        // לפתוח פופאפ קצר עם שם
+        const r = routeFeatures.find(x => x.id === routeId);
+        if (r) line.bindPopup(`<div class="popup-title">${r.name}</div>${r.region}`).openPopup();
+      }
+
+      // Draw polylines
+      routeFeatures.forEach(r => {
+        const latlngs = (r.geometry.coordinates || []).map(([lon, lat]) => [lat, lon]);
         const line = L.polyline(latlngs, { weight: 4 }).addTo(routesLayer);
-        line.bindTooltip(p.name, { sticky: true, className: 'route-label' });
-
-        line.on('click', () => {
-          map.fitBounds(line.getBounds(), { padding: [30, 30] });
-          showNotes(p.id);
-          line.bindPopup(`<div class="popup-title">${p.name}</div>${p.region || ''}`).openPopup();
-        });
+        line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
+        line.on('click', () => focusRoute(r.id));
+        routeLayersById.set(r.id, line);
       });
 
-      /* ===============================
-         בקרות שכבות
-         =============================== */
+      // Layer control
       L.control.layers(
         { 'מפה': osm, 'לוויין': esriSat },
         { 'מסלולים': routesLayer, 'הערות למסלול נבחר': notesLayer },
         { collapsed: false }
       ).addTo(map);
 
-      /* ===============================
-         כפתור "כל ישראל" – עובד בוודאות
-         =============================== */
-      // כפתור חזרה לתצוגת כל ישראל – מתחת לזום
-const homeControl = L.control({ position: 'topleft' });
+      // Home (back) button under zoom (top-left)
+      const homeControl = L.control({ position: 'topleft' });
+      homeControl.onAdd = function () {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        const btn = L.DomUtil.create('a', '', container);
+        btn.href = '#';
+        btn.title = 'חזרה לכל ישראל';
+        btn.innerHTML = '↺';
+        btn.style.fontSize = '18px';
+        btn.style.lineHeight = '30px';
+        btn.style.textAlign = 'center';
 
-homeControl.onAdd = function () {
-  const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.on(btn, 'click', (e) => {
+          L.DomEvent.preventDefault(e);
+          map.fitBounds(ISRAEL_BOUNDS, { padding: [20, 20] });
+          clearNotes();
+          highlightRouteInList(null);
+        });
+        return container;
+      };
+      homeControl.addTo(map);
 
-  const btn = L.DomUtil.create('a', '', container);
-  btn.href = '#';
-  btn.title = 'חזרה לכל ישראל';
+      // Sidebar list
+      const routesEl = document.getElementById('routes');
+      const searchEl = document.getElementById('search');
+      let activeRouteId = null;
 
-  // אייקון חץ חזרה (נראה טוב בכל מערכת)
-  btn.innerHTML = '⤺';
-  btn.style.fontSize = '16px';
-  btn.style.lineHeight = '28px';
-  btn.style.textAlign = 'center';
+      function highlightRouteInList(routeId) {
+        activeRouteId = routeId;
+        [...routesEl.querySelectorAll('.route-item')].forEach(el => {
+          el.classList.toggle('active', el.dataset.routeId === routeId);
+        });
+      }
 
+      function renderList(filterText = '') {
+        const q = filterText.trim().toLowerCase();
+        routesEl.innerHTML = '';
 
-  // למנוע גרירת מפה / זום בלחיצה
-  L.DomEvent.disableClickPropagation(container);
-  L.DomEvent.on(btn, 'click', (e) => {
-    L.DomEvent.preventDefault(e);
-    map.fitBounds(ISRAEL_BOUNDS, { padding: [20, 20] });
-    clearNotes();
-  });
+        routeFeatures
+          .filter(r => {
+            if (!q) return true;
+            return (r.name.toLowerCase().includes(q) || r.region.toLowerCase().includes(q));
+          })
+          .forEach(r => {
+            const item = document.createElement('div');
+            item.className = 'route-item';
+            item.dataset.routeId = r.id;
+            if (r.id === activeRouteId) item.classList.add('active');
 
-  return container;
-};
+            item.innerHTML = `
+              <div class="route-name">${r.name}</div>
+              <div class="route-meta">${r.region ? `אזור: ${r.region}` : ''}</div>
+            `;
 
-homeControl.addTo(map);
+            item.addEventListener('click', () => focusRoute(r.id));
+            routesEl.appendChild(item);
+          });
+      }
 
+      renderList();
 
+      searchEl.addEventListener('input', () => renderList(searchEl.value));
     });
   </script>
 </body>
