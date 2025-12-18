@@ -1,0 +1,20 @@
+[
+  {
+    "id": "carmel_ridge_18k",
+    "name": "כרמל – רכס זורם (18 ק״מ)",
+    "region": "כרמל",
+    "distance_km": 18,
+    "elev_gain_m": 750,
+    "difficulty": 4,
+    "geometry_file": "geometry/carmel_ridge_18k.json"
+  },
+  {
+    "id": "jerusalem_ridge_22k",
+    "name": "הרי ירושלים – רכס שבור (22 ק״מ)",
+    "region": "הרי ירושלים",
+    "distance_km": 22,
+    "elev_gain_m": 900,
+    "difficulty": 4,
+    "geometry_file": "geometry/jerusalem_ridge_22k.json"
+  }
+]
