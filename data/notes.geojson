@@ -1,0 +1,29 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "route_id": "carmel_ridge_18k",
+        "title": "קטע טכני",
+        "text": "כאן לא לרדוף אחרי קצב – לשמור רגליים לעלייה הבאה."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.032, 32.740]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "route_id": "jerusalem_ridge_22k",
+        "title": "החלטת קצב",
+        "text": "העלייה הזו מצטברת. אם כאן אתה באדום – הסוף יהיה סבל."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.150, 31.790]
+      }
+    }
+  ]
+}
