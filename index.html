@@ -78,10 +78,12 @@ osm.addTo(map);
 
 const routesLayer = L.layerGroup().addTo(map);
 
-L.control.layers(
-  { 'מפה': osm, 'לוויין': satellite },
-  { 'מסלולים': routesLayer }
-).addTo(map);
+/* סידור אנכי של כל ה־controls בצד שמאל למעלה */
+.leaflet-top.leaflet-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
 
 
