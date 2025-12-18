@@ -64,16 +64,30 @@ window.addEventListener('load', async () => {
 
   const map = L.map('map', { zoomControl: true }).setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
+  });
+  
+  const satellite = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { maxZoom: 19, attribution: 'Tiles © Esri' }
+  );
+  
+  // ברירת מחדל: מפה רגילה
+  osm.addTo(map);
 
   </script>
   </body>
   </html>
 
   const routesLayer = L.layerGroup().addTo(map);
+
+  L.control.layers(
+    { 'מפה': osm, 'לוויין': satellite },
+    { 'מסלולים': routesLayer }
+  ).addTo(map);
+
 
   // כפתור ↺ מתחת לזום (מופיע אחרי הזום כי אנחנו מוסיפים אותו אחרי יצירת המפה)
   const homeControl = L.control({ position: 'topleft' });
