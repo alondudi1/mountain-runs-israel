@@ -5,19 +5,13 @@
   <title>Mountain Runs Israel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Leaflet -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-  </script>
+  <!-- Leaflet (חשוב: עם defer כדי שיטען לפני הקוד שלנו) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
-    body { margin: 0; font-family: sans-serif; }
-    #app { display: flex; height: 100vh; flex-direction: row-reverse; }
-
+    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+    #app { display: flex; height: 100vh; flex-direction: row-reverse; } /* סיידבר מימין */
     #map { flex: 1; }
     #sidebar {
       width: 320px;
@@ -25,166 +19,166 @@
       padding: 10px;
       overflow-y: auto;
       background: #fff;
+      box-sizing: border-box;
     }
     .route-item {
-      padding: 6px;
+      padding: 8px 10px;
       cursor: pointer;
       border-bottom: 1px solid #eee;
+      user-select: none;
     }
-    .route-item:hover {
-      background: #f0f0f0;
-    }
+    .route-item:hover { background: #f5f5f5; }
     .region-title {
-      font-weight: bold;
-      margin-top: 12px;
+      font-weight: 800;
+      margin: 14px 0 6px;
+      opacity: .85;
     }
-    .home-btn {
-      margin: 10px 0;
-      padding: 6px;
-      cursor: pointer;
-    }
-    .status {
-      font-size: 12px;
-      color: #666;
-      margin-top: 8px;
-    }
+    .status { font-size: 12px; color: #666; margin-top: 10px; }
   </style>
 </head>
 
 <body>
 <div id="app">
   <div id="map"></div>
+
   <div id="sidebar">
+    <div style="font-weight:800; margin-bottom:8px;">מסלולים</div>
     <div id="routesList"></div>
     <div class="status" id="status">טוען…</div>
   </div>
 </div>
 
 <script>
-(async function () {
-
-  /* ========= מפה ========= */
-  const map = L.map('map').setView([31.8, 35.0], 8);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 18,
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
-
-  const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
-
-  const homeControl = L.control({ position: 'topleft' });
-  homeControl.onAdd = function () {
-    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-    const btn = L.DomUtil.create('a', '', container);
-  
-    btn.href = '#';
-    btn.title = 'חזרה לכל ישראל';
-    btn.innerHTML = '↺';           // חץ מעוגל
-    btn.style.fontSize = '18px';
-    btn.style.lineHeight = '30px';
-    btn.style.textAlign = 'center';
-    btn.style.width = '30px';
-    btn.style.height = '30px';
-  
-    L.DomEvent.disableClickPropagation(container);
-    L.DomEvent.on(btn, 'click', (e) => {
-      L.DomEvent.preventDefault(e);
-      map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
-    });
-  
-    return container;
-};
-homeControl.addTo(map);
-
-  const routesLayer = L.layerGroup().addTo(map);
-
-  /* ========= עזרים ========= */
-  async function loadJSON(path) {
-    const res = await fetch(path, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Failed to load ${path}`);
-    return res.json();
-  }
-
-  async function loadGeometry(relPath) {
-    return loadJSON('data/' + relPath);
+window.addEventListener('load', async () => {
+  // אם Leaflet לא נטען – לא נמשיך
+  if (!window.L) {
+    document.getElementById('status').textContent = 'Leaflet לא נטען (בדוק חסימת רשת/תוספים).';
+    return;
   }
 
   const statusEl = document.getElementById('status');
   const listEl   = document.getElementById('routesList');
 
+  /* ========= מפה ========= */
+  const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
+
+  const map = L.map('map', { zoomControl: true }).setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  const routesLayer = L.layerGroup().addTo(map);
+
+  // כפתור ↺ מתחת לזום (מופיע אחרי הזום כי אנחנו מוסיפים אותו אחרי יצירת המפה)
+  const homeControl = L.control({ position: 'topleft' });
+  homeControl.onAdd = function () {
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    const btn = L.DomUtil.create('a', '', container);
+    btn.href = '#';
+    btn.title = 'חזרה לכל ישראל';
+    btn.innerHTML = '↺';
+    btn.style.fontSize = '18px';
+    btn.style.lineHeight = '30px';
+    btn.style.textAlign = 'center';
+    btn.style.width = '30px';
+    btn.style.height = '30px';
+
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(btn, 'click', (e) => {
+      L.DomEvent.preventDefault(e);
+      map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+    });
+
+    return container;
+  };
+  homeControl.addTo(map);
+
+  /* ========= טעינת JSON ========= */
+  async function loadJSON(path) {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Failed to load ${path} (${res.status})`);
+    return res.json();
+  }
+  async function loadGeometry(relPath) {
+    return loadJSON('data/' + relPath);
+  }
+
   /* ========= טעינת מסלולים ========= */
   let routes;
   try {
     routes = await loadJSON('data/routes.json');
-    statusEl.textContent = `נטענו ${routes.length} מסלולים`;
   } catch (e) {
     statusEl.textContent = e.message;
     return;
   }
 
+  statusEl.textContent = `נטענו ${routes.length} מסלולים. טוען גאומטריות…`;
+
   /* ========= ציור מסלולים ========= */
-  const routeMap = {};
+  const routeMap = {}; // id -> polyline
 
   for (const r of routes) {
-    const geom = await loadGeometry(r.geometry_file);
+    try {
+      const geom = await loadGeometry(r.geometry_file);
 
-    let latlngs = [];
+      let latlngs = [];
 
-    if (geom.type === 'LineString') {
-      latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
-    } else if (geom.type === 'MultiLineString') {
-      geom.coordinates.forEach(line =>
-        line.forEach(([lon, lat]) => latlngs.push([lat, lon]))
-      );
-    }
+      if (geom.type === 'LineString') {
+        latlngs = (geom.coordinates || []).map(([lon, lat]) => [lat, lon]);
+      } else if (geom.type === 'MultiLineString') {
+        (geom.coordinates || []).forEach(line =>
+          (line || []).forEach(([lon, lat]) => latlngs.push([lat, lon]))
+        );
+      } else {
+        console.warn('Unsupported geometry type:', geom.type, r.id);
+        continue;
+      }
 
-    if (latlngs.length < 2) continue;
+      if (latlngs.length < 2) continue;
 
-    const line = L.polyline(latlngs, { weight: 4 }).addTo(routesLayer);
-    line.bindTooltip(r.name, { sticky: true });
+      const line = L.polyline(latlngs, { weight: 4 }).addTo(routesLayer);
+      line.bindTooltip(r.name, { sticky: true });
 
-    routeMap[r.id] = line;
-
-    line.on('click', () => focusRoute(r.id));
-  }
-
-  /* ========= רשימה לפי אזורים ========= */
-  function renderList() {
-    listEl.innerHTML = '';
-    const byRegion = {};
-
-    routes.forEach(r => {
-      if (!byRegion[r.region]) byRegion[r.region] = [];
-      byRegion[r.region].push(r);
-    });
-
-    for (const region of Object.keys(byRegion)) {
-      const title = document.createElement('div');
-      title.className = 'region-title';
-      title.textContent = region;
-      listEl.appendChild(title);
-
-      byRegion[region].forEach(r => {
-        const item = document.createElement('div');
-        item.className = 'route-item';
-        item.textContent = r.name;
-        item.onclick = () => focusRoute(r.id);
-        listEl.appendChild(item);
+      routeMap[r.id] = line;
+      line.on('click', () => {
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
       });
+
+    } catch (e) {
+      console.warn('Route draw failed:', r.id, e.message);
     }
   }
 
-  renderList();
+  statusEl.textContent = `מוכן. מצוירים ${Object.keys(routeMap).length} מסלולים.`;
 
-  /* ========= מיקוד ========= */
-  function focusRoute(id) {
-    const line = routeMap[id];
-    if (!line) return;
-    map.fitBounds(line.getBounds(), { padding: [30, 30] });
- ;
+  /* ========= רשימה לפי אזור ========= */
+  const byRegion = {};
+  routes.forEach(r => {
+    const region = r.region || 'לא משויך';
+    (byRegion[region] = byRegion[region] || []).push(r);
+  });
 
-})();
+  Object.keys(byRegion).sort((a,b)=>a.localeCompare(b,'he')).forEach(region => {
+    const title = document.createElement('div');
+    title.className = 'region-title';
+    title.textContent = region;
+    listEl.appendChild(title);
+
+    byRegion[region].forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'route-item';
+      item.textContent = r.name;
+      item.onclick = () => {
+        const line = routeMap[r.id];
+        if (line) map.fitBounds(line.getBounds(), { padding: [30, 30] });
+      };
+      listEl.appendChild(item);
+    });
+  });
+});
 </script>
+
 </body>
 </html>
