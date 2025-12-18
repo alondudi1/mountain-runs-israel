@@ -4,17 +4,12 @@
   <meta charset="utf-8" />
   <title>ריצות הרים בישראל</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
   <style>
     body { margin: 0; font-family: Arial, sans-serif; }
     #map { height: 100vh; width: 100vw; }
-
     .popup-title { font-weight: bold; margin-bottom: 6px; }
-
-    /* עוזר לתוויות להיות קריאות */
-    .leaflet-tooltip.route-label {
+    .leaflet-tooltip.route-label{
       background: rgba(255,255,255,0.9);
       border: 1px solid rgba(0,0,0,0.2);
       padding: 4px 6px;
@@ -24,24 +19,16 @@
     }
   </style>
 </head>
-
 <body>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <script>
-    window.addEventListener('load', () => {
-      /* ===============================
-         1) יצירת מפה – תצוגת ישראל בהתחלה
-         =============================== */
+    window.addEventListener('load', async () => {
       const map = L.map('map');
-      // גבולות נוחים לכל ישראל (תצוגת פתיחה)
-      map.fitBounds([[29.4, 34.2], [33.3, 35.9]]);
+      map.fitBounds([[29.4, 34.2], [33.3, 35.9]]); // פתיחה על כל ישראל
 
-      /* ===============================
-         2) שכבות בסיס: מפה / לוויין
-         =============================== */
+      // בסיס: מפה/לוויין
       const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
@@ -54,62 +41,30 @@
 
       osm.addTo(map);
 
-      /* ===============================
-         3) שכבות תוכן: מסלולים / הערות
-         =============================== */
+      // שכבות תוכן
       const routesLayer = L.layerGroup().addTo(map);
       const notesLayer  = L.layerGroup(); // לא מוצג בהתחלה
 
-      /* ===============================
-         4) נתונים (דוגמה) – תוסיף כאן מסלולים והערות
-         =============================== */
-      const ROUTES = [
-        {
-          id: "carmel_ridge_18k",
-          name: "כרמל – רכס זורם (18 ק״מ)",
-          region: "כרמל",
-          coords: [
-            [32.735, 35.014],
-            [32.740, 35.032],
-            [32.733, 35.050]
-          ]
-        },
-        {
-          id: "jerusalem_ridge_22k",
-          name: "הרי ירושלים – רכס שבור (22 ק״מ)",
-          region: "הרי ירושלים",
-          coords: [
-            [31.780, 35.120],
-            [31.790, 35.150],
-            [31.770, 35.175]
-          ]
-        }
-      ];
+      // טעינת נתונים
+      async function loadJSON(path) {
+        const res = await fetch(path, { cache: "no-store" });
+        if (!res.ok) throw new Error(`Failed to load ${path}: ${res.status}`);
+        return res.json();
+      }
 
-      const NOTES = [
-        {
-          route_id: "carmel_ridge_18k",
-          latlng: [32.740, 35.032],
-          title: "קטע טכני",
-          text: "כאן לא לרדוף אחרי קצב – לשמור רגליים לעלייה הבאה."
-        },
-        {
-          route_id: "carmel_ridge_18k",
-          latlng: [32.736, 35.018],
-          title: "מילוט",
-          text: "במזג אוויר בעייתי אפשר לחתוך מכאן לכביש."
-        },
-        {
-          route_id: "jerusalem_ridge_22k",
-          latlng: [31.790, 35.150],
-          title: "החלטת קצב",
-          text: "העלייה הזו מצטברת. אם כאן אתה באדום – הסוף יהיה סבל."
-        }
-      ];
+      const routesGeo = await loadJSON('./data/routes.geojson');
+      const notesGeo  = await loadJSON('./data/notes.geojson');
 
-      /* ===============================
-         5) פונקציות: הצגת הערות למסלול נבחר
-         =============================== */
+      // אינדקס הערות לפי route_id
+      const notesByRouteId = new Map();
+      (notesGeo.features || []).forEach(f => {
+        const p = f.properties || {};
+        const rid = p.route_id;
+        if (!rid) return;
+        if (!notesByRouteId.has(rid)) notesByRouteId.set(rid, []);
+        notesByRouteId.get(rid).push(f);
+      });
+
       function clearNotes() {
         notesLayer.clearLayers();
         if (map.hasLayer(notesLayer)) map.removeLayer(notesLayer);
@@ -117,65 +72,47 @@
 
       function showNotesFor(routeId) {
         notesLayer.clearLayers();
-
-        const relevant = NOTES.filter(n => n.route_id === routeId);
-        relevant.forEach(n => {
-          L.marker(n.latlng)
-            .addTo(notesLayer)
-            .bindPopup(`
-              <div class="popup-title">${n.title}</div>
-              ${n.text}
-            `);
+        const arr = notesByRouteId.get(routeId) || [];
+        arr.forEach(f => {
+          const p = f.properties || {};
+          const [lon, lat] = f.geometry.coordinates; // Point
+          L.marker([lat, lon]).addTo(notesLayer).bindPopup(`
+            <div class="popup-title">${p.title || "הערה"}</div>
+            ${p.text || ""}
+          `);
         });
 
-        if (relevant.length > 0 && !map.hasLayer(notesLayer)) {
-          notesLayer.addTo(map);
-        }
+        if (arr.length > 0 && !map.hasLayer(notesLayer)) notesLayer.addTo(map);
       }
 
-      /* ===============================
-         6) ציור כל המסלולים (בהתחלה רואים רק שמות)
-         =============================== */
-      const routeLayersById = new Map();
+      // ציור מסלולים (בהתחלה רק שמות)
+      (routesGeo.features || []).forEach(f => {
+        const p = f.properties || {};
+        const routeId = p.id;
+        const name = p.name || "מסלול";
 
-      ROUTES.forEach(r => {
-        const line = L.polyline(r.coords, { weight: 4 }).addTo(routesLayer);
+        // LineString: coordinates = [[lon,lat],...]
+        const latlngs = (f.geometry.coordinates || []).map(([lon, lat]) => [lat, lon]);
 
-        // תווית שם מסלול – מופיעה בריחוף
-        line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
+        const line = L.polyline(latlngs, { weight: 4 }).addTo(routesLayer);
+        line.bindTooltip(name, { sticky: true, className: 'route-label' });
 
-        // לחיצה על מסלול: פוקוס + הערות
         line.on('click', () => {
           map.fitBounds(line.getBounds(), { padding: [30, 30] });
-          showNotesFor(r.id);
-
-          // לפתוח פופאפ “שם מסלול” (אופציונלי)
-          line.bindPopup(`<div class="popup-title">${r.name}</div>${r.region || ""}`).openPopup();
+          showNotesFor(routeId);
+          line.bindPopup(`<div class="popup-title">${name}</div>${p.region ? p.region : ""}`).openPopup();
         });
-
-        routeLayersById.set(r.id, line);
       });
 
-      /* ===============================
-         7) בקרות: מתג מפה/לוויין + שכבות תוכן
-         =============================== */
+      // מתג שכבות
       L.control.layers(
         { "מפה": osm, "לוויין": esriSat },
         { "מסלולים": routesLayer, "הערות למסלול נבחר": notesLayer },
         { collapsed: false }
       ).addTo(map);
 
-      /* ===============================
-         8) אופציונלי: קליק על רקע המפה מנקה הערות
-         =============================== */
-      map.on('click', (e) => {
-        // אם המשתמש לחץ "באוויר" (לא על מסלול/מרקר), ננקה הערות
-        // זה טריק קטן: רק אם אין popup פתוח ואין קליק על שכבה
-        // אם לא בא לך — תמחק את הבלוק הזה.
-        // (Leaflet לא נותן כאן info מושלם, אבל זה עובד טוב בפועל)
-        if (!map._popup) clearNotes();
-      });
-
+      // קליק על רקע המפה => מסתיר הערות (אופציונלי)
+      map.on('click', () => { if (!map._popup) clearNotes(); });
     });
   </script>
 </body>
