@@ -60,33 +60,29 @@ window.addEventListener('load', async () => {
   const listEl   = document.getElementById('routesList');
 
   /* ========= מפה ========= */
-  const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
+ const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
+const map = L.map('map', { zoomControl: true }).setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
 
-  const map = L.map('map', { zoomControl: true }).setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap contributors'
+});
 
-  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  });
-  
-  const satellite = L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    { maxZoom: 19, attribution: 'Tiles © Esri' }
-  );
-  
-  // ברירת מחדל: מפה רגילה
-  osm.addTo(map);
+const satellite = L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  { maxZoom: 19, attribution: 'Tiles © Esri' }
+);
 
-  </script>
-  </body>
-  </html>
+// ברירת מחדל
+osm.addTo(map);
 
-  const routesLayer = L.layerGroup().addTo(map);
+const routesLayer = L.layerGroup().addTo(map);
 
-  L.control.layers(
-    { 'מפה': osm, 'לוויין': satellite },
-    { 'מסלולים': routesLayer }
-  ).addTo(map);
+L.control.layers(
+  { 'מפה': osm, 'לוויין': satellite },
+  { 'מסלולים': routesLayer }
+).addTo(map);
+
 
 
   // כפתור ↺ מתחת לזום (מופיע אחרי הזום כי אנחנו מוסיפים אותו אחרי יצירת המפה)
