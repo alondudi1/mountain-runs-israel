@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="he">
+<head>
+  <meta charset="utf-8" />
+  <title>ריצות הרים בישראל</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; }
+    #map { height: 100vh; width: 100vw; }
+    .popup-title { font-weight: bold; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // יצירת מפה
+  const map = L.map('map').setView([31.8, 35.1], 8);
+
+  // שכבת מפה חינמית
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // מסלול דוגמה – כרמל
+  const route = L.polyline(
+    [
+      [32.735, 35.014],
+      [32.740, 35.032],
+      [32.733, 35.050]
+    ],
+    { color: 'red', weight: 4 }
+  ).addTo(map);
+
+  route.bindPopup(`
+    <div class="popup-title">כרמל – רכס זורם</div>
+    18 ק״מ | 750 מ׳ טיפוס<br>
+    ריצת רכס קלאסית עם קטעים טכניים.
+  `);
+
+  // הערה על המסלול
+  const note = L.marker([32.740, 35.032]).addTo(map);
+  note.bindPopup(`
+    <div class="popup-title">קטע טכני</div>
+    כאן לא לרדוף אחרי קצב – לשמור רגליים לעלייה הבאה.
+  `);
+
+  // התאמת המפה למסלול
+  map.fitBounds(route.getBounds());
+</script>
+
+</body>
+</html>
