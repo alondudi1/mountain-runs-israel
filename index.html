@@ -32,14 +32,7 @@
     .route-item:hover { background: #f5f5f5; }
     .status { font-size: 12px; color: #666; margin-top: 10px; line-height: 1.4; }
 
-    
-    .leaflet-control-layers {
-      margin-top: 0; /* gap כבר מטפל בריווח */
-    }
-    .leaflet-control-layers {
-      width: auto;
-    }
-
+    .leaflet-control-layers { width: auto; }
 
     .leaflet-tooltip.route-label {
       background: #fff;
@@ -99,46 +92,45 @@
     // שכבת מסלולים
     const routesLayer = L.layerGroup().addTo(map);
 
-    // בורר מפה/לוויין + שכבות (באותו צד של הזום)
-    const layersControl = L.control.layers(
+    // בורר מפה/לוויין (ימין למעלה)
+    L.control.layers(
       { 'מפה': osm, 'לוויין': satellite },
       { 'מסלולים': routesLayer },
       { position: 'topright' }
-    );
-    layersControl.addTo(map);
+    ).addTo(map);
 
-    // כפתור ↺ חזרה לתצוגת כל ישראל (מתחת לזום, ליד הבורר)
+    // כפתור ↺ חזרה לתצוגת כל ישראל (מתחת לזום)
     const homeControl = L.control({ position: 'topleft' });
-homeControl.onAdd = function () {
-  const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    homeControl.onAdd = function () {
+      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
 
-  const btn = L.DomUtil.create('a', '', container);
-  btn.href = '#';
-  btn.title = 'חזרה לכל ישראל';
-  btn.innerHTML = '↺';
-  btn.style.fontSize = '18px';
-  btn.style.lineHeight = '30px';
-  btn.style.textAlign = 'center';
-  btn.style.width = '30px';
-  btn.style.height = '30px';
+      const btn = L.DomUtil.create('a', '', container);
+      btn.href = '#';
+      btn.title = 'חזרה לכל ישראל';
+      btn.innerHTML = '↺';
+      btn.style.fontSize = '18px';
+      btn.style.lineHeight = '30px';
+      btn.style.textAlign = 'center';
+      btn.style.width = '30px';
+      btn.style.height = '30px';
 
-  L.DomEvent.disableClickPropagation(container);
-  L.DomEvent.on(btn, 'click', (e) => {
-    L.DomEvent.preventDefault(e);
-    map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
-  });
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.on(btn, 'click', (e) => {
+        L.DomEvent.preventDefault(e);
+        map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+      });
 
-  // ⬇️ זה הטריק: להכניס את הכפתור מתחת לזום בתוך אותו "bar"
-  setTimeout(() => {
-    const zoomBar = document.querySelector('.leaflet-control-zoom');
-    if (zoomBar && zoomBar.parentElement) {
-      zoomBar.parentElement.insertBefore(container, zoomBar.nextSibling);
-    }
-  }, 0);
+      // להעביר את הכפתור להיות מתחת לזום בתוך אותו bar
+      setTimeout(() => {
+        const zoomBar = document.querySelector('.leaflet-control-zoom');
+        if (zoomBar && zoomBar.parentElement) {
+          zoomBar.parentElement.insertBefore(container, zoomBar.nextSibling);
+        }
+      }, 0);
 
-  return L.DomUtil.create('div'); // מחזירים div ריק כי כבר הכנסנו את הכפתור ידנית
-};
-homeControl.addTo(map);
+      return L.DomUtil.create('div'); // div ריק – הכפתור הוזז ידנית
+    };
+    homeControl.addTo(map);
 
     // טעינת JSON
     async function loadJSON(path) {
@@ -156,15 +148,36 @@ homeControl.addTo(map);
       routes = await loadJSON('data/routes.json');
     } catch (e) {
       statusEl.textContent = e.message;
-      
-
       return;
     }
-   
+
     statusEl.textContent = `נטענו ${routes.length} מסלולים. טוען גאומטריות…`;
 
     // ציור מסלולים
     const routeMap = {}; // id -> polyline
+
+    // הדגשה למסלול נבחר
+    const DEFAULT_STYLE  = { weight: 4, opacity: 0.85 };
+    const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
+
+    let selectedRouteId = null;
+
+    function selectRoute(routeId, doFit = false) {
+      const line = routeMap[routeId];
+      if (!line) return;
+
+      if (selectedRouteId && routeMap[selectedRouteId]) {
+        routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
+      }
+
+      selectedRouteId = routeId;
+      line.setStyle(SELECTED_STYLE);
+      line.bringToFront();
+
+      if (doFit) {
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
+      }
+    }
 
     for (const r of routes) {
       try {
@@ -185,46 +198,16 @@ homeControl.addTo(map);
 
         if (latlngs.length < 2) continue;
 
-        // סגנונות
-const DEFAULT_STYLE  = { weight: 4, opacity: 0.85 };
-const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
+        const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
+        line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
 
-      const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
-      line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
-      
-      routeMap[r.id] = line;
-      
-      // שמור גם נקודות כדי לעשות fitBounds גם מהתפריט אם צריך
-      line.__routeId = r.id;
-      
-      line.on('click', () => {
-        selectRoute(r.id, true);
-      });
+        routeMap[r.id] = line;
 
-      } 
-      let selectedRouteId = null;
+        line.on('click', () => {
+          selectRoute(r.id, true);
+        });
 
-      function selectRoute(routeId, doFit = false) {
-        if (!routeMap[routeId]) return;
-      
-        // החזרת הקודם לברירת מחדל
-        if (selectedRouteId && routeMap[selectedRouteId]) {
-          routeMap[selectedRouteId].setStyle({ weight: 4, opacity: 0.85 });
-        }
-      
-        // הדגשת הנבחר
-        selectedRouteId = routeId;
-        const line = routeMap[routeId];
-        line.setStyle({ weight: 7, opacity: 1.0 });
-        line.bringToFront();
-      
-        if (doFit) {
-          map.fitBounds(line.getBounds(), { padding: [30, 30] });
-        }
-      }
-
-      
-      catch (e) {
+      } catch (e) {
         console.warn('Route draw failed:', r.id, e.message);
       }
     }
@@ -249,10 +232,7 @@ const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
         const item = document.createElement('div');
         item.className = 'route-item';
         item.textContent = r.name;
-        item.onclick = () => {
-          selectRoute(r.id, true);
-        };
-
+        item.onclick = () => selectRoute(r.id, true);
         listEl.appendChild(item);
       });
     });
