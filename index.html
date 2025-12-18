@@ -158,6 +158,9 @@ homeControl.addTo(map);
       statusEl.textContent = e.message;
       return;
     }
+    } catch (e) {
+      console.warn('Route draw failed:', r.id, r.geometry_file, e);
+    }
 
     statusEl.textContent = `נטענו ${routes.length} מסלולים. טוען גאומטריות…`;
 
