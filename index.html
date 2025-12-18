@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
@@ -34,6 +34,14 @@
       opacity: .85;
     }
     .status { font-size: 12px; color: #666; margin-top: 10px; }
+    /* סידור אנכי של כל ה־controls בצד שמאל למעלה */
+    .leaflet-top.leaflet-left {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    
   </style>
 </head>
 
@@ -78,14 +86,14 @@ osm.addTo(map);
 
 const routesLayer = L.layerGroup().addTo(map);
 
-/* סידור אנכי של כל ה־controls בצד שמאל למעלה */
-.leaflet-top.leaflet-left {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+const layersControl = L.control.layers(
+  { 'מפה': osm, 'לוויין': satellite },
+  { 'מסלולים': routesLayer },
+  { position: 'topleft' }
+);
+layersControl.addTo(map);
 
-
+homeControl.addTo(map);
 
   // כפתור ↺ מתחת לזום (מופיע אחרי הזום כי אנחנו מוסיפים אותו אחרי יצירת המפה)
   const homeControl = L.control({ position: 'topleft' });
