@@ -2,166 +2,41 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8" />
-  <title>מסלול ריצה</title>
+  <title>מסלול ריצה - GPX</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
   <script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #fafafa;
-      color: #222;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 16px;
-    }
-
-    /* HERO */
-    .hero {
-      margin-bottom: 12px;
-      position: relative;
-    }
-
-    .hero h1 {
-      margin: 0;
-      font-size: 26px;
-    }
-
-    .hero-meta {
-      margin-top: 6px;
-      font-size: 14px;
-      color: #555;
-    }
-
-    /* MAP */
-    #map {
-      height: 420px;
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 20px;
-    }
-
-    /* CONTENT GRID */
-    .content {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 20px;
-    }
-
-    @media (max-width: 800px) {
-      .content {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.08);
-    }
-
-    .card h3 {
-      margin-top: 0;
-    }
-
-    .info-item {
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .download {
-      margin-top: 16px;
-      padding: 12px;
-      text-align: center;
-      border: 1px dashed #bbb;
-      border-radius: 10px;
-      color: #777;
-      transition: all 0.3s;
-    }
-
-    .leaflet-control-layers {
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.2);
-      font-size: 13px;
-    }    
-
-    .leaflet-control-layers-toggle {
-      width: 36px;
-      height: 36px;
-    }
-
-    .elevation-card {
-      margin: 16px 0 24px;
-      background: #fff;
-      border-radius: 12px;
-      padding: 14px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.08);
-    }
-    
-    .elevation-title {
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    
-    .elevation-placeholder {
-      height: 120px;
-      background: repeating-linear-gradient(
-        45deg,
-        #eee,
-        #eee 10px,
-        #f7f7f7 10px,
-        #f7f7f7 20px
-      );
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #888;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .back-link {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      padding: 8px 14px;
-      background: #ffffff;
-      color: #222;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      box-shadow: 0 2px 6px rgba(0,0,0,.2);
-    }
-    
-    .back-link:hover {
-      background: #f5f5f5;
-      border-color: #aaa;
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #fafafa; color: #222; }
+    .container { max-width: 1100px; margin: auto; padding: 16px; }
+    .hero { margin-bottom: 12px; position: relative; }
+    .hero h1 { margin: 0; font-size: 26px; }
+    #map { height: 420px; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    .content { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media (max-width: 800px) { .content { grid-template-columns: 1fr; } }
+    .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+    .card h3 { margin-top: 0; }
+    .info-item { margin-bottom: 8px; font-size: 14px; }
+    .download { margin-top: 16px; padding: 12px; text-align: center; border: 1px dashed #bbb; border-radius: 10px; color: #777; transition: all 0.3s; }
+    .elevation-card { margin: 16px 0 24px; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+    .elevation-title { font-weight: 700; margin-bottom: 8px; }
+    .elevation-placeholder { height: 120px; background: #f9f9f9; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 14px; text-align: center; }
+    .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
   </style>
 </head>
 
 <body>
 
 <div class="container">
-
   <div class="hero">
-    <a href="index.html" class="back-link">
-      ← חזרה למפת המסלולים
-    </a>
+    <a href="index.html" class="back-link">← חזרה</a>
     <h1 id="routeName">טוען מסלול…</h1>
-    </div>
+  </div>
 
   <div id="map"></div>
 
@@ -175,7 +50,7 @@
   <div class="content">
     <div class="card">
       <h3>תיאור המסלול</h3>
-      <div id="routeDescription">תיאור יתווסף כאן.</div>
+      <div id="routeDescription">טוען תיאור...</div>
     </div>
 
     <div class="card">
@@ -184,141 +59,31 @@
       <div class="info-item" id="infoDistance"></div>
       <div class="info-item" id="infoAscent"></div>
       <div class="info-item" id="infoDifficulty"></div>
-
-      <div class="download" id="downloadBtn">
-        ⬇️ הורדת GPX (בקרוב)
-      </div>
+      <div class="download" id="downloadBtn">⬇️ הורדת GPX</div>
     </div>
   </div>
 </div>
 
 <script>
 window.addEventListener('load', async () => {
+  const isPremiumUser = false; // מצב פרימיום
 
-  // משתנה סטטוס פרימיום
-  const isPremiumUser = false; 
-
-  // -------- helpers --------
   async function loadJSON(path) {
     const res = await fetch(path);
     if (!res.ok) throw new Error(path);
     return res.json();
   }
 
-  function getRouteId() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('id');
-  }
-
-  // -------- get route --------
-  const routeId = getRouteId();
-  if (!routeId) {
-    document.body.innerHTML = 'חסר מזהה מסלול בכתובת';
-    return;
-  }
+  const params = new URLSearchParams(window.location.search);
+  const routeId = params.get('id');
 
   const routes = await loadJSON('data/routes.json');
   const route = routes.find(r => r.id === routeId);
+  if (!route) return;
 
-  if (!route) {
-    document.body.innerHTML = 'מסלול לא נמצא';
-    return;
-  }
-
-  // -------- fill text --------
+  // עדכון טקסטים בסיסיים
   document.title = route.name;
   document.getElementById('routeName').textContent = route.name;
-
   document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
-  document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance_km || '?'} ק״מ`;
-  document.getElementById('infoAscent').textContent = `⬆️ טיפוס: ${route.ascent_m || '?'} מ׳`;
   document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
-  document.getElementById('routeDescription').textContent = route.description || 'תיאור יתווסף בהמשך.';
-
-  // -------- חסימת פרימיום: גרף גבהים --------
-  const elevBox = document.getElementById('elevationContent');
-  if (!isPremiumUser) {
-      elevBox.style.background = "#f9f9f9";
-      elevBox.innerHTML = `
-        <span style="font-size: 18px; margin-bottom: 8px;">🔒</span>
-        <span style="font-weight: 600;">פרופיל גבהים ושיפועים זמין למנויי פרימיום</span>
-        <small style="color: #666; margin-top: 4px;">שדרגו כדי לתכנן את המאמץ בצורה חכמה</small>
-      `;
-  }
-
-  // -------- חסימת פרימיום: הורדה --------
-  const dlBtn = document.getElementById('downloadBtn');
-  if (!isPremiumUser) {
-      dlBtn.innerHTML = "🔒 הורדת GPX (פרימיום)";
-      dlBtn.style.background = "#f0f0f0";
-      dlBtn.style.cursor = "not-allowed";
-      dlBtn.onclick = () => alert("הורדת קבצי מסלול זמינה למנויי פרימיום בלבד.");
-  } else {
-      dlBtn.style.cursor = "pointer";
-      dlBtn.style.color = "#d11";
-      dlBtn.onclick = () => { console.log("Downloading..."); };
-  }
-
-  // -------- map --------
-  const map = L.map('map').setView(route.center || [31.5, 35.0], 11);
-
-  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' });
-  const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap' });
-  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles © Esri' });
-  
-  topo.addTo(map);
-  
-  L.control.layers({ 'מפה': osm, 'טופוגרפי': topo, 'לוויין': satellite }, {}, { position: 'topright' }).addTo(map);
-  L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
-
-  const geomPath = route.geometry_file.includes('/') ? `data/${route.geometry_file}` : `data/geometry/${route.geometry_file}`;
-  const geom = await loadJSON(geomPath);
-
-  let latlngs = [];
-  if (geom.type === 'LineString') {
-    latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
-  } else if (geom.type === 'MultiLineString') {
-    geom.coordinates.forEach(line => line.forEach(([lon, lat]) => latlngs.push([lat, lon])));
-  }
-
-  const line = L.polyline(latlngs, { weight: 5, color: '#d11' }).addTo(map);
-  
-  // ===== חיצים לכיוון ההליכה =====
-  if (typeof L.polylineDecorator === 'function') {
-      L.polylineDecorator(line, {
-          patterns: [{
-              offset: '10%',
-              repeat: '120px',
-              symbol: L.Symbol.arrowHead({
-                  pixelSize: 18,
-                  pathOptions: { color: '#d11', fillOpacity: 1, weight: 0, fill: true }
-              })
-          }]
-      }).addTo(map);
-  }
-
-  // ===== תגיות הערות ותמונות (Waypoints) =====
-  // דוגמה לנתונים - בעתיד יגיע מה-JSON של המסלול
-  const demoWaypoints = [
-    { lat: latlngs[Math.floor(latlngs.length/2)][0], lng: latlngs[Math.floor(latlngs.length/2)][1], note: "נקודת עניין: תצפית נוף", img: "https://via.placeholder.com/150" }
-  ];
-
-  demoWaypoints.forEach(wp => {
-    const marker = L.marker([wp.lat, wp.lng]).addTo(map);
-    if (isPremiumUser) {
-        marker.bindPopup(`<b>${wp.note}</b><br><img src="${wp.img}" style="width:100%; margin-top:5px; border-radius:5px;">`);
-    } else {
-        marker.bindPopup(`<b>🔒 תוכן פרימיום</b><br>שדרגו כדי לראות תמונות והערות מהשטח.`);
-    }
-  });
-
-  setTimeout(() => {
-    map.invalidateSize();
-    map.fitBounds(line.getBounds(), { padding: [30, 30] });
-  }, 100);
-
-});
-</script>
-
-</body>
-</html>
+  document.getElementById('routeDescription').textContent = route.description || 'תיאור יתווס
