@@ -95,12 +95,14 @@
     /* ===== Route Preview Card ===== */
 .route-preview {
   position: fixed;
-  left: 50%;
+  right: 16px;      /* במקום left:50% */
+  left: auto;
   bottom: 16px;
-  transform: translate(-50%, 120%);
+  transform: translateY(120%);  /* במקום translate(-50%, 120%) */
   opacity: 0;
 
-  width: min(420px, 92%);
+  width: 360px;                 /* במקום min(420px, 92%) */
+  max-width: calc(100% - 32px);
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0,0,0,.25);
@@ -114,9 +116,10 @@
 }
 
 .route-preview.show {
-  transform: translate(-50%, 0);
+  transform: translateY(0);     /* חשוב */
   opacity: 1;
 }
+
 
   </style>
 </head>
