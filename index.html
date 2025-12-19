@@ -61,7 +61,7 @@
 <div id="app">
   <div id="map"></div>
   <div id="sidebar">
-    <div style="font-weight:800; margin-bottom:8px;">מסלולים</div>
+    <div style="font-weight:800; margin-bottom:8px;">1מסלולים</div>
     <div id="routesList"></div>
     <div class="status" id="status">טוען…</div>
   </div>
@@ -128,8 +128,8 @@ backControl.addTo(map);
     attribution: '© OpenTopoMap (SRTM, OSM contributors)'
   });
   
-  // ברירת מחדל: טופוגרפי
-  topo.addTo(map);
+  // ברירת מחדל: osm
+  osm.addTo(map);
   
   // תפריט בחירת מפות – ימין למעלה
   L.control.layers(
