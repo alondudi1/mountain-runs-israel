@@ -108,7 +108,7 @@
 
   for (const r of routes) {
     try {
-      const geom = await loadJSON(`data/geometry/${r.geometry_file}`);
+      const geom = await loadJSON(`data/${r.geometry_file}`);
 
       if (!geom.coordinates) continue;
 
