@@ -262,8 +262,8 @@ window.addEventListener('load', async () => {
   document.getElementById('routeMeta').textContent =
     `${route.region || ''} • ${route.distance_km || '?'} ק״מ • ↑${route.ascent_m || '?'} מ׳`;
 
-  document.getElementById('infoDifficulty').textContent =
-    `🔥 קושי: ${route.difficulty || '—'}`;
+   document.getElementById('infoRegion').textContent =
+    `📍 אזור: ${route.region || '—'}`;
   
   document.getElementById('routeDescription').textContent =
     route.description || 'תיאור יתווסף בהמשך.';
@@ -274,9 +274,10 @@ window.addEventListener('load', async () => {
   document.getElementById('infoAscent').textContent =
     `⬆️ טיפוס: ${route.ascent_m || '?'} מ׳`;
 
-  document.getElementById('infoRegion').textContent =
-    `📍 אזור: ${route.region || '—'}`;
-
+ 
+  document.getElementById('infoDifficulty').textContent =
+    `🔥 קושי: ${route.difficulty || '—'}`;
+  
   // -------- map --------
   const map = L.map('map').setView(route.center || [31.5, 35.0], 11);
 
