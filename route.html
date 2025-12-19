@@ -126,13 +126,23 @@
       font-size: 14px;
     }
 
+    .hero {
+      position: relative;
+    }
+    
     .back-link {
-      display: inline-block;
-      margin-bottom: 6px;
+      position: absolute;
+      top: 0;
+      left: 0;              /* ⬅️ שמאל עליון */
       font-size: 14px;
       color: #555;
       text-decoration: none;
     }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
     
     .back-link:hover {
       text-decoration: underline;
