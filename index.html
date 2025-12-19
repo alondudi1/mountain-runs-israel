@@ -258,6 +258,8 @@
         const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
         line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
 
+        line.__latlngs = latlngs;
+        
         routeMap[r.id] = line;
 
         line.on('click', () => {
