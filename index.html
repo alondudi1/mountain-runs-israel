@@ -359,17 +359,26 @@
 
     // רשימה לפי אזור
     const byRegion = {};
-    // לולאה שעוברת על המסלולים ומציירת אותם (תומכת ב-GPX ו-JSON)
+    // לולאה חדשה שתומכת גם ב-JSON וגם ב-GPX
     for (const r of routes) {
       try {
-        const geomPath = r.geometry_file.includes('/') ? `data/${r.geometry_file}` : `data/geometry/${r.geometry_file}`;
+        // תיקון נתיב חכם
+        let geomPath = r.geometry_file;
+        if (!geomPath.includes('/')) {
+            geomPath = `data/geometry/${geomPath}`;
+        } else if (!geomPath.startsWith('data/')) {
+            geomPath = `data/${geomPath}`;
+        }
 
         if (geomPath.toLowerCase().endsWith('.gpx')) {
-          // טיפול בקובץ GPX
-          new L.GPX(geomPath, {
+          // ציור קובץ GPX
+          const gpx = new L.GPX(geomPath, {
             async: true,
-            polyline_options: DEFAULT_STYLE
-          }).on('loaded', function(e) {
+            polyline_options: DEFAULT_STYLE,
+            marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null }
+          });
+
+          gpx.on('loaded', function(e) {
             const layer = e.target;
             layer.bindTooltip(r.name, { sticky: true, className: 'route-label' });
             layer.on('click', (ev) => {
@@ -380,7 +389,7 @@
             layer.addTo(routesLayer);
           });
         } else {
-          // טיפול בקובץ JSON (הקוד המקורי שלך)
+          // ציור קובץ JSON (הקוד המקורי שלך)
           const geom = await loadJSON(geomPath);
           let latlngs = [];
           if (geom.type === 'LineString') {
@@ -392,12 +401,15 @@
           if (latlngs.length >= 2) {
             const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
             line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
-            line.on('click', () => selectRoute(r.id, true));
+            line.on('click', (ev) => {
+               L.DomEvent.stopPropagation(ev);
+               selectRoute(r.id, true);
+            });
             routeMap[r.id] = line;
           }
         }
       } catch (e) {
-        console.warn('Route draw failed:', r.id, e.message);
+        console.warn('ציור מסלול נכשל:', r.id, e.message);
       }
     }
   </script>
