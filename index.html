@@ -11,74 +11,29 @@
 
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
-    #app { display: flex; height: 100vh; flex-direction: row-reverse; } /* סיידבר מימין */
+    #app { display: flex; height: 100vh; flex-direction: row-reverse; }
     #map { flex: 1; }
     #sidebar {
-        width: 320px;
-        border-left: 1px solid #ddd;
-        padding: 10px;
-        overflow-y: auto;
-        background: #fff;
-        box-sizing: border-box;
-        position: relative;
-        z-index: 1000;
-  }
-
-    .region-title { font-weight: 800; margin: 14px 0 6px; opacity: .85; }
-    .route-item {
-      padding: 8px 10px;
-      cursor: pointer;
-      border-bottom: 1px solid #eee;
-      user-select: none;
+        width: 320px; border-left: 1px solid #ddd; padding: 10px;
+        overflow-y: auto; background: #fff; box-sizing: border-box;
+        position: relative; z-index: 1000;
     }
+    .region-title { font-weight: 800; margin: 14px 0 6px; opacity: .85; }
+    .route-item { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #eee; user-select: none; }
     .route-item:hover { background: #f5f5f5; }
     .status { font-size: 12px; color: #666; margin-top: 10px; line-height: 1.4; }
+    .leaflet-tooltip.route-label { background: #fff; border: 1px solid #aaa; padding: 4px 6px; border-radius: 6px; font-size: 13px; }
 
-    .leaflet-control-layers { width: auto; }
-
-    .leaflet-tooltip.route-label {
-      background: #fff;
-      border: 1px solid #aaa;
-      padding: 4px 6px;
-      border-radius: 6px;
-      font-size: 13px;
-    }
-
-    @media (max-width: 800px) {
-      #app { flex-direction: column; }
-      #sidebar { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #ddd; }
-      #map { height: 60vh; }
-    }
-
-    /* ===== Route Preview Card ===== */
     .route-preview {
-      position: fixed;
-      right: 16px;
-      left: auto;
-      bottom: 16px;
-      transform: translateY(120%);
-      opacity: 0;
-      width: 360px;
-      max-width: calc(100% - 32px);
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-      padding: 16px;
-      transition: transform 0.45s cubic-bezier(.2,.8,.2,1), opacity 0.35s ease;
+      position: fixed; right: 16px; bottom: 16px; transform: translateY(120%);
+      opacity: 0; width: 360px; max-width: calc(100% - 32px);
+      background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      padding: 16px; transition: transform 0.45s cubic-bezier(.2,.8,.2,1), opacity 0.35s ease;
       z-index: 1000;
     }
-
     .route-preview.show { transform: translateY(0); opacity: 1; }
     .route-preview.hidden { display: none; }
-
-    .preview-title { font-weight: 800; margin-bottom: 4px; }
-    .preview-meta { font-size: 13px; color: #555; margin-bottom: 10px; }
-    
-    #previewBtn {
-      width: 100%; border: none; background: #d11; color: #fff;
-      border-radius: 10px; padding: 8px; font-weight: 700; cursor: pointer;
-    }
-    #previewBtn:hover { background: #b00; }
+    #previewBtn { width: 100%; border: none; background: #d11; color: #fff; border-radius: 10px; padding: 8px; font-weight: 700; cursor: pointer; }
   </style>
 </head>
 
@@ -93,8 +48,8 @@
   </div>
 
   <div id="routePreview" class="route-preview hidden">
-    <div class="preview-title" id="previewTitle"></div>
-    <div class="preview-meta" id="previewMeta"></div>
+    <div style="font-weight:800;" id="previewTitle"></div>
+    <div style="font-size:13px; color:#555; margin-bottom:10px;" id="previewMeta"></div>
     <button id="previewBtn">לפרטי המסלול →</button>
   </div>
 
@@ -102,10 +57,9 @@
   window.addEventListener('load', async () => {
     const statusEl = document.getElementById('status');
     const listEl = document.getElementById('routesList');
-
     const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
+    
     const map = L.map('map').setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     const routesLayer = L.layerGroup().addTo(map);
 
@@ -114,25 +68,27 @@
       return res.json();
     }
 
-    let routes = await loadJSON('data/routes.json');
+    const routes = await loadJSON('data/routes.json');
     const routeMap = {};
-    const DEFAULT_STYLE  = { weight: 4, opacity: 0.85, color: '#d11' };
+    const DEFAULT_STYLE = { weight: 4, opacity: 0.85, color: '#d11' };
     const SELECTED_STYLE = { weight: 7, opacity: 1.0, color: '#d11' };
     let selectedRouteId = null;
 
-    // פונקציית בחירת מסלול - קריטית להצגת ה-UI והמיקוד
     function selectRoute(routeId, doFit = false) {
-      if (!routeMap[routeId]) return;
-      if (selectedRouteId && routeMap[selectedRouteId]) routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
-      
-      selectedRouteId = routeId;
       const layer = routeMap[routeId];
+      if (!layer) return;
+
+      if (selectedRouteId && routeMap[selectedRouteId]) {
+        routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
+      }
+
+      selectedRouteId = routeId;
       layer.setStyle(SELECTED_STYLE);
       if (layer.bringToFront) layer.bringToFront();
-      
+
       if (doFit) {
-        const bounds = layer.getBounds ? layer.getBounds() : null;
-        if (bounds && bounds.isValid()) map.fitBounds(bounds, { padding: [30, 30] });
+        const bounds = layer.getBounds();
+        if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
       }
 
       const r = routes.find(x => x.id === routeId);
@@ -146,20 +102,15 @@
       }
     }
 
-    // טעינת המסלולים עם נתיבים מתוקנים (GPX ב-data/gpx, JSON ב-data/json)
+    // ציור המסלולים
     for (const r of routes) {
       try {
-        let geomPath = r.geometry_file;
-        const isGPX = geomPath.toLowerCase().endsWith('.gpx');
-        
-        // תיקון נתיב חכם לפי סוג הקובץ
-        if (!geomPath.startsWith('data/')) {
-            const folder = isGPX ? 'gpx' : 'json';
-            geomPath = `data/${folder}/${geomPath}`;
-        }
+        let path = r.geometry_file;
+        const isGPX = path.toLowerCase().endsWith('.gpx');
+        const fullPath = isGPX ? `data/gpx/${path}` : `data/json/${path}`;
 
         if (isGPX) {
-          const gpx = new L.GPX(geomPath, {
+          new L.GPX(fullPath, {
             async: true,
             polyline_options: DEFAULT_STYLE,
             marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null }
@@ -171,44 +122,36 @@
             layer.addTo(routesLayer);
           });
         } else {
-          const geom = await loadJSON(geomPath);
-          let latlngs = [];
-          if (geom.type === 'LineString') latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
-          else if (geom.type === 'MultiLineString') geom.coordinates.forEach(line => line.forEach(([lon, lat]) => latlngs.push([lat, lon])));
+          const geom = await loadJSON(fullPath);
+          let coords = [];
+          if (geom.type === 'LineString') coords = geom.coordinates.map(c => [c[1], c[0]]);
+          else if (geom.type === 'MultiLineString') geom.coordinates.forEach(l => l.forEach(c => coords.push([c[1], c[0]])));
           
-          if (latlngs.length >= 2) {
-            const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
+          if (coords.length >= 2) {
+            const line = L.polyline(coords, DEFAULT_STYLE).addTo(routesLayer);
             line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
             line.on('click', (ev) => { L.DomEvent.stopPropagation(ev); selectRoute(r.id, true); });
             routeMap[r.id] = line;
           }
         }
-      } catch (e) { console.warn('Draw failed:', r.id); }
+      } catch (e) { console.warn('Error loading:', r.id); }
     }
 
-    // בניית הרשימה בסיידבר
+    // סיידבר
     const byRegion = {};
-    routes.forEach(r => {
-      const region = r.region || 'לא משויך';
-      (byRegion[region] = byRegion[region] || []).push(r);
-    });
-
+    routes.forEach(r => { (byRegion[r.region || 'אחר'] = byRegion[r.region || 'אחר'] || []).push(r); });
     listEl.innerHTML = '';
-    Object.keys(byRegion).sort((a,b)=>a.localeCompare(b,'he')).forEach(region => {
-      const title = document.createElement('div');
-      title.className = 'region-title';
-      title.textContent = region;
-      listEl.appendChild(title);
+    Object.keys(byRegion).sort().forEach(region => {
+      const t = document.createElement('div'); t.className = 'region-title'; t.textContent = region;
+      listEl.appendChild(t);
       byRegion[region].forEach(r => {
-        const item = document.createElement('div');
-        item.className = 'route-item';
-        item.textContent = r.name;
-        item.onclick = () => selectRoute(r.id, true);
-        listEl.appendChild(item);
+        const i = document.createElement('div'); i.className = 'route-item'; i.textContent = r.name;
+        i.onclick = () => selectRoute(r.id, true);
+        listEl.appendChild(i);
       });
     });
 
-    statusEl.textContent = `מוכן. נטענו ${routes.length} מסלולים.`;
+    statusEl.textContent = `מוכן. ${routes.length} מסלולים.`;
   });
   </script>
 </body>
