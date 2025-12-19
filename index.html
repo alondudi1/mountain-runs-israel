@@ -181,6 +181,24 @@
       return data.results.map(r => r.elevation);
     }
 
+    // ===== Elevation: שלב 2 – חישוב טיפוס וירידה =====
+    function computeAscentDescent(elevations) {
+      let ascent = 0;
+      let descent = 0;
+    
+      for (let i = 1; i < elevations.length; i++) {
+        const diff = elevations[i] - elevations[i - 1];
+        if (diff > 0) ascent += diff;
+        else descent += Math.abs(diff);
+      }
+    
+      return {
+        ascent: Math.round(ascent),
+        descent: Math.round(descent)
+      };
+    }
+
+
     // טען מסלולים (מטא-דאטה)
     let routes;
     try {
