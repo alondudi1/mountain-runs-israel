@@ -92,6 +92,17 @@
       background: #b00;
 }
 
+    .route-preview {
+      transform: translateY(20px);
+      opacity: 0;
+      transition: transform .25s ease, opacity .25s ease;
+    }
+    
+    .route-preview.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
   </style>
 </head>
 
