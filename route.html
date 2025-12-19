@@ -96,6 +96,37 @@
   height: 36px;
 }
 
+    .elevation-card {
+      margin: 16px 0 24px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    }
+    
+    .elevation-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .elevation-placeholder {
+      height: 120px;
+      background: repeating-linear-gradient(
+        45deg,
+        #eee,
+        #eee 10px,
+        #f7f7f7 10px,
+        #f7f7f7 20px
+      );
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 14px;
+    }
+
+
   </style>
 </head>
 
@@ -111,6 +142,15 @@
 
   <!-- MAP -->
   <div id="map"></div>
+
+  <!-- ELEVATION PROFILE (placeholder) -->
+  <div id="elevation" class="elevation-card">
+    <div class="elevation-title">פרופיל גבהים</div>
+    <div class="elevation-placeholder">
+      גרף גבהים יתווסף כאן
+    </div>
+  </div>
+
 
   <!-- CONTENT -->
   <div class="content">
