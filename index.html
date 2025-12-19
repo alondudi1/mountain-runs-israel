@@ -159,45 +159,6 @@
       return loadJSON('data/' + relPath);
     }
 
-    // ===== Elevation: שלב 1 – שליפת גבהים =====
-    async function fetchElevations(latlngs) {
-      // מצמצמים כדי לא לעבור מגבלות (עד ~200 נקודות)
-      const step = Math.max(1, Math.ceil(latlngs.length / 200));
-      const sample = latlngs.filter((_, i) => i % step === 0);
-    
-      const locations = sample.map(([lat, lon]) => ({
-        latitude: lat,
-        longitude: lon
-      }));
-    
-      const res = await fetch('https://api.open-elevation.com/api/v1/lookup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locations })
-      });
-    
-      if (!res.ok) throw new Error(`Elevation API failed (${res.status})`);
-      const data = await res.json();
-      return data.results.map(r => r.elevation);
-    }
-
-    // ===== Elevation: שלב 2 – חישוב טיפוס וירידה =====
-    function computeAscentDescent(elevations) {
-      let ascent = 0;
-      let descent = 0;
-    
-      for (let i = 1; i < elevations.length; i++) {
-        const diff = elevations[i] - elevations[i - 1];
-        if (diff > 0) ascent += diff;
-        else descent += Math.abs(diff);
-      }
-    
-      return {
-        ascent: Math.round(ascent),
-        descent: Math.round(descent)
-      };
-    }
-
 
     // טען מסלולים (מטא-דאטה)
     let routes;
@@ -220,33 +181,25 @@
     let selectedRouteId = null;
 
     function selectRoute(routeId, doFit = false) {
-  if (!routeMap[routeId]) return;
-
-  if (selectedRouteId && routeMap[selectedRouteId]) {
-    routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
-  }
-
-  selectedRouteId = routeId;
-  const line = routeMap[routeId];
-  line.setStyle(SELECTED_STYLE);
-  line.bringToFront();
-
-  if (doFit) {
-    map.fitBounds(line.getBounds(), { padding: [30, 30] });
-  }
-
-  // <<< שלב הטיפוס כאן >>>
-  (async () => {
-    try {
-      statusEl.textContent = 'מחשב טיפוס/ירידה…';
-      const elevations = await fetchElevations(line.__latlngs);
-      const { ascent, descent } = computeAscentDescent(elevations);
-      statusEl.textContent = `טיפוס ↑ ${ascent} מ׳ | ירידה ↓ ${descent} מ׳`;
-    } catch {
-      statusEl.textContent = 'טיפוס/ירידה לא זמינים';
+      if (!routeMap[routeId]) return;
+    
+      // החזרת הקודם לברירת מחדל
+      if (selectedRouteId && routeMap[selectedRouteId]) {
+        routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
+      }
+    
+      selectedRouteId = routeId;
+      const line = routeMap[routeId];
+      line.setStyle(SELECTED_STYLE);
+      line.bringToFront();
+    
+      if (doFit) {
+        map.fitBounds(line.getBounds(), { padding: [30, 30] });
+      }
+    
+      // סטטוס פשוט – בלי חישובים
+      statusEl.textContent = 'מסלול נבחר';
     }
-  })();
-}
 
 
     for (const r of routes) {
@@ -270,8 +223,6 @@
 
         const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
         line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
-
-        line.__latlngs = latlngs;
         
         routeMap[r.id] = line;
 
