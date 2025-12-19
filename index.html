@@ -220,21 +220,34 @@
     let selectedRouteId = null;
 
     function selectRoute(routeId, doFit = false) {
-      const line = routeMap[routeId];
-      if (!line) return;
+  if (!routeMap[routeId]) return;
 
-      if (selectedRouteId && routeMap[selectedRouteId]) {
-        routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
-      }
+  if (selectedRouteId && routeMap[selectedRouteId]) {
+    routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
+  }
 
-      selectedRouteId = routeId;
-      line.setStyle(SELECTED_STYLE);
-      line.bringToFront();
+  selectedRouteId = routeId;
+  const line = routeMap[routeId];
+  line.setStyle(SELECTED_STYLE);
+  line.bringToFront();
 
-      if (doFit) {
-        map.fitBounds(line.getBounds(), { padding: [30, 30] });
-      }
+  if (doFit) {
+    map.fitBounds(line.getBounds(), { padding: [30, 30] });
+  }
+
+  // <<< שלב הטיפוס כאן >>>
+  (async () => {
+    try {
+      statusEl.textContent = 'מחשב טיפוס/ירידה…';
+      const elevations = await fetchElevations(line.__latlngs);
+      const { ascent, descent } = computeAscentDescent(elevations);
+      statusEl.textContent = `טיפוס ↑ ${ascent} מ׳ | ירידה ↓ ${descent} מ׳`;
+    } catch {
+      statusEl.textContent = 'טיפוס/ירידה לא זמינים';
     }
+  })();
+}
+
 
     for (const r of routes) {
       try {
