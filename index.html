@@ -153,6 +153,60 @@
 
     statusEl.textContent = `מוכן. ${routes.length} מסלולים.`;
   });
+  // משתנה לשמירת המסלול שנבחר כרגע
+    let currentSelectedId = null;
+
+    function selectRoute(id, zoomTo = true) {
+      const routeData = routes.find(r => r.id === id);
+      const layer = routeMap[id];
+
+      if (!routeData || !layer) return;
+
+      // איפוס עיצוב למסלול הקודם
+      if (currentSelectedId && routeMap[currentSelectedId]) {
+        routeMap[currentSelectedId].setStyle(DEFAULT_STYLE);
+      }
+
+      // הדגשת המסלול הנבחר
+      layer.setStyle(SELECTED_STYLE);
+      layer.bringToFront();
+      currentSelectedId = id;
+
+      // עדכון כרטיס התצוגה המקדימה (Preview Card)
+      const preview = document.getElementById('routePreview');
+      const title = document.getElementById('previewTitle');
+      const meta = document.getElementById('previewMeta');
+      const btn = document.getElementById('previewBtn');
+
+      title.textContent = routeData.name;
+      meta.textContent = `${routeData.distance || ''} ק"מ | טיפוס: ${routeData.climb || ''} מ'`;
+      
+      // הצגת הכרטיס
+      preview.classList.remove('hidden');
+      setTimeout(() => preview.classList.add('show'), 10);
+
+      // קישור לכפתור (אם יש דף נפרד)
+      btn.onclick = () => {
+        window.location.href = `route.html?id=${id}`;
+      };
+
+      // התמקדות במפה
+      if (zoomTo) {
+        if (layer.getBounds) {
+          map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+        }
+      }
+    }
+
+    // סגירת הכרטיס בלחיצה על מקום ריק במפה
+    map.on('click', () => {
+      if (currentSelectedId && routeMap[currentSelectedId]) {
+        routeMap[currentSelectedId].setStyle(DEFAULT_STYLE);
+      }
+      document.getElementById('routePreview').classList.remove('show');
+      setTimeout(() => document.getElementById('routePreview').classList.add('hidden'), 400);
+      currentSelectedId = null;
+    });
   </script>
 </body>
 </html>
