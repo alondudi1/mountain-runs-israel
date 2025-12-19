@@ -24,6 +24,6 @@
     "distance_km": 20,
     "elev_gain_m": 750,
     "difficulty": 27,
-    "geometry_file": "gpx/zarzar_20k.gpx"
+    "geometry_file": "geometry/zarzar21.json"
   }
 ]
