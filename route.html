@@ -312,7 +312,12 @@ window.addEventListener('load', async () => {
   ).addTo(map);
 
 
-  const geom = await loadJSON(`data/${route.geometry_file}`);
+  const geomPath = route.geometry_file.includes('/')
+    ? `data/${route.geometry_file}`
+    : `data/geometry/${route.geometry_file}`;
+  
+  const geom = await loadJSON(geomPath);
+
 
   let latlngs = [];
   if (geom.type === 'LineString') {
@@ -323,10 +328,7 @@ window.addEventListener('load', async () => {
     );
   }
 
-  const line = L.polyline(latlngs, {
-    weight: 5,
-    color: '#d11'
-  }).addTo(map);
+  const line = L.polyline(latlngs, { weight: 5, color: '#d11' }).addTo(routeLayer);
 
   // חצים לאורך המסלול (כל ~250 מטר בערך, תלוי בזום)
   const arrows = L.polylineDecorator(line, {
