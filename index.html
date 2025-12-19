@@ -267,6 +267,10 @@
         `${r.region || ''} • ${r.distance_km || '?'} ק״מ`;
       
       preview.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        preview.classList.add('show');
+      });
+
       
       btn.onclick = () => {
         window.location.href = `route.html?id=${routeId}`;
