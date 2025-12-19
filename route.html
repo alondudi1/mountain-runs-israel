@@ -48,7 +48,6 @@
       margin-bottom: 20px;
     }
 
-    L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
     
     /* CONTENT GRID */
     .content {
@@ -313,7 +312,8 @@ window.addEventListener('load', async () => {
     { position: 'topright' }
   ).addTo(map);
 
-
+  L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map);
+  
   const geomPath = route.geometry_file.includes('/')
     ? `data/${route.geometry_file}`
     : `data/geometry/${route.geometry_file}`;
