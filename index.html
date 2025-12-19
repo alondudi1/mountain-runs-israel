@@ -49,6 +49,49 @@
       #sidebar { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #ddd; }
       #map { height: 60vh; }
     }
+
+    .route-preview {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+      z-index: 1000;
+      width: 260px;
+    }
+    
+    .route-preview.hidden {
+      display: none;
+    }
+    
+    .preview-title {
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    
+    .preview-meta {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    
+    #previewBtn {
+      width: 100%;
+      border: none;
+      background: #d11;
+      color: #fff;
+      border-radius: 10px;
+      padding: 8px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    
+    #previewBtn:hover {
+      background: #b00;
+}
+
   </style>
 </head>
 
@@ -181,21 +224,43 @@
     let selectedRouteId = null;
 
     function selectRoute(routeId, doFit = false) {
-      if (!routeMap[routeId]) return;
-    
-      // החזרת הקודם לברירת מחדל
-      if (selectedRouteId && routeMap[selectedRouteId]) {
-        routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
-      }
-    
+            if (!routeMap[routeId]) return;
+          
+            // החזרת הקודם לברירת מחדל
+            if (selectedRouteId && routeMap[selectedRouteId]) {
+              routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
+            }
+          
+            selectedRouteId = routeId;
+            const line = routeMap[routeId];
+            line.setStyle(SELECTED_STYLE);
+            line.bringToFront();
+          
+            if (doFit) {
+              map.fitBounds(line.getBounds(), { padding: [30, 30] });
+            }
+      
+            // ===== Route Preview Card =====
       selectedRouteId = routeId;
-      const line = routeMap[routeId];
-      line.setStyle(SELECTED_STYLE);
-      line.bringToFront();
-    
-      if (doFit) {
-        map.fitBounds(line.getBounds(), { padding: [30, 30] });
-      }
+      
+      const preview = document.getElementById('routePreview');
+      const titleEl = document.getElementById('previewTitle');
+      const metaEl  = document.getElementById('previewMeta');
+      const btn     = document.getElementById('previewBtn');
+      
+      const r = routes.find(x => x.id === routeId);
+      if (!r) return;
+      
+      titleEl.textContent = r.name;
+      metaEl.textContent =
+        `${r.region || ''} • ${r.distance_km || '?'} ק״מ`;
+      
+      preview.classList.remove('hidden');
+      
+      btn.onclick = () => {
+        window.location.href = `route.html?id=${routeId}`;
+};
+
     
       // סטטוס פשוט – בלי חישובים
       statusEl.textContent = 'מסלול נבחר';
@@ -261,5 +326,13 @@
     });
   });
   </script>
+
+  <!-- Route Preview Card -->
+  <div id="routePreview" class="route-preview hidden">
+    <div class="preview-title" id="previewTitle"></div>
+    <div class="preview-meta" id="previewMeta"></div>
+    <button id="previewBtn">לפרטי המסלול →</button>
+  </div>
+
 </body>
 </html>
