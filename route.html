@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>מסלול ריצה</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fafafa;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 16px;
+    }
+
+    /* HERO */
+    .hero {
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .hero-meta {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* MAP */
+    #map {
+      height: 420px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    /* CONTENT GRID */
+    .content {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 800px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    }
+
+    .card h3 {
+      margin-top: 0;
+    }
+
+    .info-item {
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .download {
+      margin-top: 16px;
+      padding: 12px;
+      text-align: center;
+      border: 1px dashed #bbb;
+      border-radius: 10px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1 id="routeName">טוען מסלול…</h1>
+    <div class="hero-meta" id="routeMeta"></div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DESCRIPTION -->
+    <div class="card">
+      <h3>תיאור המסלול</h3>
+      <div id="routeDescription">
+        תיאור יתווסף כאן.
+      </div>
+    </div>
+
+    <!-- INFO -->
+    <div class="card">
+      <h3>פרטים חשובים</h3>
+
+      <div class="info-item" id="infoDistance"></div>
+      <div class="info-item" id="infoAscent"></div>
+      <div class="info-item" id="infoDifficulty"></div>
+      <div class="info-item" id="infoRegion"></div>
+
+      <div class="download">
+        ⬇️ הורדת GPX (בקרוב)
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+window.addEventListener('load', async () => {
+
+  // -------- helpers --------
+  async function loadJSON(path) {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(path);
+    return res.json();
+  }
+
+  function getRouteId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+  }
+
+  // -------- get route --------
+  const routeId = getRouteId();
+  if (!routeId) {
+    document.body.innerHTML = 'חסר מזהה מסלול בכתובת';
+    return;
+  }
+
+  const routes = await loadJSON('data/routes.json');
+  const route = routes.find(r => r.id === routeId);
+
+  if (!route) {
+    document.body.innerHTML = 'מסלול לא נמצא';
+    return;
+  }
+
+  // -------- fill text --------
+  document.title = route.name;
+  document.getElementById('routeName').textContent = route.name;
+
+  document.getElementById('routeMeta').textContent =
+    `${route.region || ''} • ${route.distance_km || '?'} ק״מ • ↑${route.ascent_m || '?'} מ׳`;
+
+  document.getElementById('routeDescription').textContent =
+    route.description || 'תיאור יתווסף בהמשך.';
+
+  document.getElementById('infoDistance').textContent =
+    `📏 מרחק: ${route.distance_km || '?'} ק״מ`;
+
+  document.getElementById('infoAscent').textContent =
+    `⬆️ טיפוס: ${route.ascent_m || '?'} מ׳`;
+
+  document.getElementById('infoDifficulty').textContent =
+    `🔥 קושי: ${route.difficulty || '—'}`;
+
+  document.getElementById('infoRegion').textContent =
+    `📍 אזור: ${route.region || '—'}`;
+
+  // -------- map --------
+  const map = L.map('map').setView(route.center || [31.5, 35.0], 11);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  const geom = await loadJSON(`data/${route.geometry_file}`);
+
+  let latlngs = [];
+  if (geom.type === 'LineString') {
+    latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
+  } else if (geom.type === 'MultiLineString') {
+    geom.coordinates.forEach(line =>
+      line.forEach(([lon, lat]) => latlngs.push([lat, lon]))
+    );
+  }
+
+  const line = L.polyline(latlngs, {
+    weight: 5,
+    color: '#d11'
+  }).addTo(map);
+
+  map.fitBounds(line.getBounds(), { padding: [30, 30] });
+
+});
+</script>
+
+</body>
+</html>
