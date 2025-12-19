@@ -257,9 +257,7 @@ window.addEventListener('load', async () => {
   document.title = route.name;
   document.getElementById('routeName').textContent = route.name;
 
-  document.getElementById('routeMeta').textContent =
-    `${route.region || ''} • ${route.distance_km || '?'} ק״מ • ↑${route.ascent_m || '?'} מ׳`;
-
+  
    document.getElementById('infoRegion').textContent =
     `📍 אזור: ${route.region || '—'}`;
   
