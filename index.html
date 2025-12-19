@@ -7,41 +7,42 @@
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
-    #app { display: flex; height: 100vh; flex-direction: row-reverse; } /* סיידבר מימין */
+    #app { display: flex; height: 100vh; flex-direction: row-reverse; }
     #map { flex: 1; }
-    #sidebar {
-        width: 320px;
-        border-left: 1px solid #ddd;
-        padding: 10px;
-        overflow-y: auto;
-        background: #fff;
-        box-sizing: border-box;
-        position: relative;
-        z-index: 1000;
-  }
 
-    .region-title { font-weight: 800; margin: 14px 0 6px; opacity: .85; }
+    #sidebar {
+      width: 320px;
+      border-left: 1px solid #ddd;
+      padding: 10px;
+      overflow-y: auto;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .region-title {
+      font-weight: 800;
+      margin: 14px 0 6px;
+      opacity: .85;
+    }
+
     .route-item {
       padding: 8px 10px;
       cursor: pointer;
       border-bottom: 1px solid #eee;
-      user-select: none;
     }
-    .route-item:hover { background: #f5f5f5; }
-    .status { font-size: 12px; color: #666; margin-top: 10px; line-height: 1.4; }
 
-    .leaflet-control-layers { width: auto; }
+    .route-item:hover {
+      background: #f5f5f5;
+    }
 
-    .leaflet-tooltip.route-label {
-      background: #fff;
-      border: 1px solid #aaa;
-      padding: 4px 6px;
-      border-radius: 6px;
-      font-size: 13px;
+    .status {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
     }
 
     @media (max-width: 800px) {
@@ -49,279 +50,96 @@
       #sidebar { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #ddd; }
       #map { height: 60vh; }
     }
-
-    .route-preview {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      background: #fff;
-      border-radius: 14px;
-      padding: 14px 16px;
-      box-shadow: 0 6px 20px rgba(0,0,0,.2);
-      z-index: 1000;
-      width: 260px;
-    }
-    
-    .route-preview.hidden {
-      display: none;
-    }
-    
-    .preview-title {
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    
-    .preview-meta {
-      font-size: 13px;
-      color: #555;
-      margin-bottom: 10px;
-    }
-    
-    #previewBtn {
-      width: 100%;
-      border: none;
-      background: #d11;
-      color: #fff;
-      border-radius: 10px;
-      padding: 8px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    
-    #previewBtn:hover {
-      background: #b00;
-}
-
-    .route-preview {
-      transform: translateY(20px);
-      opacity: 0;
-      transition: transform .25s ease, opacity .25s ease;
-    }
-    
-    .route-preview.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
-
   </style>
 </head>
 
 <body>
-  <div id="app">
-    <div id="map"></div>
-    <div id="sidebar">
-      <div style="font-weight:800; margin-bottom:8px;">מסלולים</div>
-      <div id="routesList"></div>
-      <div class="status" id="status">טוען…</div>
-    </div>
+<div id="app">
+  <div id="map"></div>
+  <div id="sidebar">
+    <div style="font-weight:800; margin-bottom:8px;">מסלולים</div>
+    <div id="routesList"></div>
+    <div class="status" id="status">טוען…</div>
   </div>
+</div>
 
-  <script>
-  window.addEventListener('load', async () => {
-    const statusEl = document.getElementById('status');
-    const listEl = document.getElementById('routesList');
+<script>
+(async function () {
 
-    if (!window.L) {
-      statusEl.textContent = 'Leaflet לא נטען (אולי תוסף/חסימה בדפדפן).';
-      return;
-    }
+  const statusEl = document.getElementById('status');
+  const listEl   = document.getElementById('routesList');
 
-    const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
+  if (!window.L) {
+    statusEl.textContent = 'Leaflet לא נטען';
+    return;
+  }
 
-    // מפה
-    const map = L.map('map', { zoomControl: true }).setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+  // ===== מפה =====
+  const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
 
-    // שכבות בסיס
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
-    });
+  const map = L.map('map').setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
 
-    const satellite = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      { maxZoom: 19, attribution: 'Tiles © Esri' }
-    );
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
 
-    const topo = L.tileLayer(
-      'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      {
-        maxZoom: 17,
-        attribution: '© OpenTopoMap (CC-BY-SA)'
-      }
-    );
+  const routesLayer = L.layerGroup().addTo(map);
 
-    // ברירת מחדל
-    osm.addTo(map);
+  // ===== טעינת JSON =====
+  async function loadJSON(path) {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Failed to load ${path}`);
+    return res.json();
+  }
 
-    // שכבת מסלולים
-    const routesLayer = L.layerGroup().addTo(map);
+  let routes;
+  try {
+    routes = await loadJSON('data/routes.json');
+  } catch (e) {
+    statusEl.textContent = e.message;
+    return;
+  }
 
-    // בורר מפה/לוויין (ימין למעלה)
-    L.control.layers(
-      {
-        'מפה': osm,
-        'טופוגרפי': topo,
-        'לוויין': satellite
-      },
-      {
-        'מסלולים': routesLayer
-      },
-      { position: 'topright' }
-    ).addTo(map);
+  statusEl.textContent = `נטענו ${routes.length} מסלולים`;
 
+  // ===== ציור מסלולים =====
+  const routeMap = {};
 
-    // כפתור ↺ חזרה לתצוגת כל ישראל (מתחת לזום)
-    const homeControl = L.control({ position: 'topleft' });
-    homeControl.onAdd = function () {
-      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-
-      const btn = L.DomUtil.create('a', '', container);
-      btn.href = '#';
-      btn.title = 'חזרה לכל ישראל';
-      btn.innerHTML = '↺';
-      btn.style.fontSize = '18px';
-      btn.style.lineHeight = '30px';
-      btn.style.textAlign = 'center';
-      btn.style.width = '30px';
-      btn.style.height = '30px';
-
-      L.DomEvent.disableClickPropagation(container);
-      L.DomEvent.on(btn, 'click', (e) => {
-        L.DomEvent.preventDefault(e);
-        map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
-      });
-
-      // להעביר את הכפתור להיות מתחת לזום בתוך אותו bar
-      setTimeout(() => {
-        const zoomBar = document.querySelector('.leaflet-control-zoom');
-        if (zoomBar && zoomBar.parentElement) {
-          zoomBar.parentElement.insertBefore(container, zoomBar.nextSibling);
-        }
-      }, 0);
-
-      return L.DomUtil.create('div'); // div ריק – הכפתור הוזז ידנית
-    };
-    homeControl.addTo(map);
-
-    // טעינת JSON
-    async function loadJSON(path) {
-      const res = await fetch(path, { cache: 'no-store' });
-      if (!res.ok) throw new Error(`Failed to load ${path} (${res.status})`);
-      return res.json();
-    }
-    async function loadGeometry(relPath) {
-      return loadJSON('data/' + relPath);
-    }
-
-
-    // טען מסלולים (מטא-דאטה)
-    let routes;
+  for (const r of routes) {
     try {
-      routes = await loadJSON('data/routes.json');
+      const geom = await loadJSON(`data/geometry/${r.geometry_file}`);
+
+      if (!geom.coordinates) continue;
+
+      const latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
+      if (latlngs.length < 2) continue;
+
+      const line = L.polyline(latlngs, {
+        weight: 4,
+        opacity: 0.85
+      }).addTo(routesLayer);
+
+      line.bindTooltip(r.name, { sticky: true });
+
+      routeMap[r.id] = line;
+
     } catch (e) {
-      statusEl.textContent = e.message;
-      return;
+      console.warn('Route failed:', r.id, e.message);
     }
+  }
 
-    statusEl.textContent = `נטענו ${routes.length} מסלולים. טוען גאומטריות…`;
+  // ===== רשימה לפי אזור =====
+  const byRegion = {};
+  routes.forEach(r => {
+    const region = r.region || 'לא משויך';
+    (byRegion[region] = byRegion[region] || []).push(r);
+  });
 
-    // ציור מסלולים
-    const routeMap = {}; // id -> polyline
+  Object.keys(byRegion)
+    .sort((a, b) => a.localeCompare(b, 'he'))
+    .forEach(region => {
 
-    // הדגשה למסלול נבחר
-    const DEFAULT_STYLE  = { weight: 4, opacity: 0.85 };
-    const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
-
-    let selectedRouteId = null;
-
-    function selectRoute(routeId, doFit = false) {
-            if (!routeMap[routeId]) return;
-          
-            // החזרת הקודם לברירת מחדל
-            if (selectedRouteId && routeMap[selectedRouteId]) {
-              routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
-            }
-          
-            selectedRouteId = routeId;
-            const line = routeMap[routeId];
-            line.setStyle(SELECTED_STYLE);
-            line.bringToFront();
-          
-            if (doFit) {
-              map.fitBounds(line.getBounds(), { padding: [30, 30] });
-            }
-      
-            // ===== Route Preview Card =====
-      selectedRouteId = routeId;
-      
-      const preview = document.getElementById('routePreview');
-      const titleEl = document.getElementById('previewTitle');
-      const metaEl  = document.getElementById('previewMeta');
-      const btn     = document.getElementById('previewBtn');
-      
-      const r = routes.find(x => x.id === routeId);
-      if (!r) return;
-      
-      titleEl.textContent = r.name;
-      metaEl.textContent =
-        `${r.region || ''} • ${r.distance_km || '?'} ק״מ`;
-      
-      preview.classList.remove('hidden');
-      
-      btn.onclick = () => {
-        window.location.href = `route.html?id=${routeId}`;
-};
-
-    
-      // סטטוס פשוט – בלי חישובים
-      statusEl.textContent = 'מסלול נבחר';
-    }
-
-
-    for (const r of routes) {
-      try {
-        const geom = await loadGeometry(r.geometry_file);
-
-        let latlngs = [];
-
-        if (geom.type === 'LineString') {
-          latlngs = (geom.coordinates || []).map(([lon, lat]) => [lat, lon]);
-        } else if (geom.type === 'MultiLineString') {
-          (geom.coordinates || []).forEach(line =>
-            (line || []).forEach(([lon, lat]) => latlngs.push([lat, lon]))
-          );
-        } else {
-          console.warn('Unsupported geometry type:', geom.type, r.id);
-          continue;
-        }
-
-        if (latlngs.length < 2) continue;
-
-        const line = L.polyline(latlngs, DEFAULT_STYLE).addTo(routesLayer);
-        line.bindTooltip(r.name, { sticky: true, className: 'route-label' });
-        
-        routeMap[r.id] = line;
-
-        line.on('click', () => {
-          selectRoute(r.id, true);
-        });
-
-      } catch (e) {
-        console.warn('Route draw failed:', r.id, e.message);
-      }
-    }
-
-    statusEl.textContent = `מוכן. מצוירים ${Object.keys(routeMap).length} מסלולים.`;
-
-    // רשימה לפי אזור
-    const byRegion = {};
-    routes.forEach(r => {
-      const region = r.region || 'לא משויך';
-      (byRegion[region] = byRegion[region] || []).push(r);
-    });
-
-    listEl.innerHTML = '';
-    Object.keys(byRegion).sort((a,b)=>a.localeCompare(b,'he')).forEach(region => {
       const title = document.createElement('div');
       title.className = 'region-title';
       title.textContent = region;
@@ -331,19 +149,18 @@
         const item = document.createElement('div');
         item.className = 'route-item';
         item.textContent = r.name;
-        item.onclick = () => selectRoute(r.id, true);
+
+        item.onclick = () => {
+          const line = routeMap[r.id];
+          if (!line) return;
+          map.fitBounds(line.getBounds(), { padding: [30, 30] });
+        };
+
         listEl.appendChild(item);
       });
     });
-  });
-  </script>
 
-  <!-- Route Preview Card -->
-  <div id="routePreview" class="route-preview hidden">
-    <div class="preview-title" id="previewTitle"></div>
-    <div class="preview-meta" id="previewMeta"></div>
-    <button id="previewBtn">לפרטי המסלול →</button>
-  </div>
-
+})();
+</script>
 </body>
 </html>
