@@ -159,6 +159,28 @@
       return loadJSON('data/' + relPath);
     }
 
+    // ===== Elevation: שלב 1 – שליפת גבהים =====
+    async function fetchElevations(latlngs) {
+      // מצמצמים כדי לא לעבור מגבלות (עד ~200 נקודות)
+      const step = Math.max(1, Math.ceil(latlngs.length / 200));
+      const sample = latlngs.filter((_, i) => i % step === 0);
+    
+      const locations = sample.map(([lat, lon]) => ({
+        latitude: lat,
+        longitude: lon
+      }));
+    
+      const res = await fetch('https://api.open-elevation.com/api/v1/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locations })
+      });
+    
+      if (!res.ok) throw new Error(`Elevation API failed (${res.status})`);
+      const data = await res.json();
+      return data.results.map(r => r.elevation);
+    }
+
     // טען מסלולים (מטא-דאטה)
     let routes;
     try {
