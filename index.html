@@ -92,16 +92,31 @@
       background: #b00;
 }
 
-    .route-preview {
-      transform: translateY(20px);
-      opacity: 0;
-      transition: transform .25s ease, opacity .25s ease;
-    }
-    
-    .route-preview.show {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    /* ===== Route Preview Card ===== */
+.route-preview {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translate(-50%, 120%);
+  opacity: 0;
+
+  width: min(420px, 92%);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  padding: 16px;
+
+  transition:
+    transform 0.45s cubic-bezier(.2,.8,.2,1),
+    opacity 0.35s ease;
+
+  z-index: 1000;
+}
+
+.route-preview.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
 
   </style>
 </head>
