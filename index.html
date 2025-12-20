@@ -173,10 +173,7 @@
   
     titleEl.textContent = r.name || routeId;
   
-    const parts = [];
-    if (r.region) parts.push(r.region);
-    if (r.distance_km) parts.push(`${r.distance_km} ק"מ`);
-    metaEl.textContent = parts.join(' • ');
+    
   
     btnEl.href = `route.html?id=${encodeURIComponent(routeId)}`;
   
