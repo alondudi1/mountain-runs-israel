@@ -64,7 +64,7 @@
   </div>
 </div>
 
-<script>
+  <script>
  window.addEventListener('load', async () => {
   const mapContainer = document.getElementById('map');
   
@@ -101,29 +101,41 @@
     if (geom && geom.coordinates) {
       const coords = geom.coordinates; 
       const latlngs = [];
-      const distances = [0];
+      const distances = [];
       const elevations = [];
-      const slopes = [0];
+      const slopes = [];
       let totalDist = 0;
 
+      // שלב 1: איסוף נקודות, גבהים ומרחקים מצטברים
       coords.forEach((point, i) => {
         const [lon, lat, ele] = point;
         const currentPt = L.latLng(lat, lon);
-        const currentEle = ele || 0;
         latlngs.push(currentPt);
-        elevations.push(currentEle);
+        elevations.push(ele || 0);
 
-        if (i > 0) {
-          const prevPt = L.latLng(coords[i-1][1], coords[i-1][0]);
-          const dMeters = prevPt.distanceTo(currentPt);
-          totalDist += dMeters / 1000;
+        if (i === 0) {
+          distances.push("0.00");
+        } else {
+          const prevPt = latlngs[i-1];
+          totalDist += prevPt.distanceTo(currentPt) / 1000;
           distances.push(totalDist.toFixed(2));
-          
-          const dEle = currentEle - elevations[i-1];
-          const s = dMeters > 0 ? (dEle / dMeters) * 100 : 0;
-          slopes.push(s.toFixed(1));
         }
       });
+
+      // שלב 2: חישוב שיפוע ממוצע (חלון נע של 5 נקודות לכל צד)
+      const windowSize = 5; 
+      for (let i = 0; i < coords.length; i++) {
+        // מגדירים את גבולות החלון לחישוב
+        let start = Math.max(0, i - windowSize);
+        let end = Math.min(coords.length - 1, i + windowSize);
+        
+        let distMeters = latlngs[start].distanceTo(latlngs[end]);
+        let eleDiff = elevations[end] - elevations[start];
+        
+        // חישוב השיפוע על פני הטווח הממוצע
+        let s = distMeters > 5 ? (eleDiff / distMeters) * 100 : 0;
+        slopes.push(s.toFixed(1));
+      }
 
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
@@ -159,14 +171,14 @@
             legend: { display: false },
             tooltip: { 
               enabled: true,
-              displayColors: false, // <-- זה מבטל את הריבוע האדום המיותר
+              displayColors: false, // מסיר את הריבוע האדום
               callbacks: {
                 title: (items) => `מרחק: ${items[0].label} ק"מ`,
                 label: (ctx) => {
                   const idx = ctx.dataIndex;
                   return [
                     `גובה: ${ctx.raw} מטר`,
-                    `שיפוע: ${slopes[idx]}%`
+                    `שיפוע ממוצע: ${slopes[idx]}%`
                   ];
                 }
               }
@@ -194,8 +206,7 @@
         }
       });
 
-      // פתרון לבעיית המרקר שנשאר על המפה:
-      // מאזין לרגע שהעכבר יוצא מכל שטח הקנבס של הגרף
+      // העלמת המרקר כשהעכבר יוצא משטח הגרף
       canvas.addEventListener('mouseleave', () => {
         hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
         hoverMarker.closeTooltip();
@@ -217,6 +228,6 @@
   }
 });
 </script>
-
+  
 </body>
 </html>
