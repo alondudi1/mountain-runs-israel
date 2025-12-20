@@ -91,19 +91,24 @@
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
     document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance_km || '--'} ק"מ`;
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elev_gain_m || '--'} מ'`;
-    // טעינת תיאור המסלול מקובץ חיצוני
+   // 5. טעינת תיאור המסלול (קובץ חיצוני או טקסט מה-JSON)
+    const descContainer = document.getElementById('routeDescription');
     if (route.description_file) {
       try {
         const descRes = await fetch(`data/descriptions/${route.description_file}`);
         if (descRes.ok) {
           const descHtml = await descRes.text();
-          document.getElementById('routeDescription').innerHTML = descHtml;
+          descContainer.innerHTML = descHtml;
         } else {
-          document.getElementById('routeDescription').textContent = "לא נמצא קובץ תיאור.";
+          descContainer.innerHTML = `<p style="color:red;">שגיאה: קובץ התיאור "${route.description_file}" לא נמצא בתיקיית data/descriptions.</p>`;
         }
       } catch (e) {
         console.error("שגיאה בטעינת התיאור:", e);
+        descContainer.textContent = "שגיאה בטעינת התיאור מהשרת.";
       }
+    } else {
+      // אם לא הוגדר קובץ חיצוני, נשתמש בטקסט הרגיל מה-JSON (תומך ב-HTML)
+      descContainer.innerHTML = route.description || "אין תיאור זמין למסלול זה.";
     }
 
     // 2. אתחול המפה עם תפריט שכבות (זהה לחלוטין לקובץ האינדקס)
