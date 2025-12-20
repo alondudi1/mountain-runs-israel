@@ -42,6 +42,15 @@
     #map.loaded { 
       opacity: 1; 
     }
+
+    /* הוספה: הגדרות למפה חלקה */
+    #map { 
+      opacity: 0; 
+      transition: opacity 0.8s ease-in-out; 
+    }
+    #map.loaded { 
+      opacity: 1; 
+    }
   </style>
 </head>
 
@@ -80,7 +89,7 @@
 </div>
 
 <script>
-  window.addEventListener('load', async () => {
+ window.addEventListener('load', async () => {
   const mapContainer = document.getElementById('map');
   
   async function loadJSON(path) {
@@ -92,13 +101,8 @@
   const params = new URLSearchParams(window.location.search);
   const routeId = params.get('id');
 
-  if (!routeId) {
-    document.getElementById('routeName').textContent = "שגיאה: חסר מזהה מסלול";
-    return;
-  }
-
   try {
-    // 1. טעינת נתוני המסלולים
+    // 1. טעינת הנתונים מ-routes.json
     const routes = await loadJSON('data/routes.json');
     const route = routes.find(r => r.id === routeId);
 
@@ -107,77 +111,65 @@
       return;
     }
 
-    // 2. עדכון פרטי הטקסט
+    // 2. עדכון תעודת הזהות (Identity Card) - המרחק והטיפוס שביקשת
     document.title = route.name;
     document.getElementById('routeName').textContent = route.name;
     document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
+    
+    // שליפת המרחק והטיפוס מה-JSON
     document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance || '--'} ק"מ`;
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elevation || '--'} מ'`;
+    
     document.getElementById('routeDescription').textContent = route.description || 'אין תיאור זמין למסלול זה.';
 
-    // 3. אתחול המפה
+    // 3. אתחול המפה והשכבות
     const map = L.map('map');
 
-    // הגדרת כל השכבות כפי שהן מופיעות בדף הראשי
     const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
       maxZoom: 16,
       attribution: '© Israel Hiking Map'
-    }).addTo(map); // ברירת המחדל
-
-    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    });
+    }).addTo(map);
 
     const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      attribution: 'Tiles © Esri'
+      attribution: '© Esri'
     });
 
-    const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-      maxZoom: 17,
-      attribution: '© OpenTopoMap'
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OSM'
     });
 
-    // הוספת תפריט השכבות
-    L.control.layers({ 
-      "שבילים (IHM)": ihm, 
-      "רחובות (OSM)": osm,
-      "לוויין": satellite,
-      "טופוגרפי": topo
-    }, null, { position: 'topright' }).addTo(map);
+    L.control.layers({ "שבילים (IHM)": ihm, "לוויין": satellite, "מפה": osm }, null, { position: 'topright' }).addTo(map);
 
-    // 4. טעינת הגיאומטריה ומיקוד המפה
+    // 4. טעינת קובץ המסלול (Geometry) ומיקוד
     const geom = await loadJSON(`data/${route.geometry_file}`);
     
     if (geom && geom.coordinates) {
       const latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
 
-      // מיקוד מיידי (מתבצע כשהמפה עוד שקופה)
+      // מיקוד מיידי ללא אנימציה (כשהמפה עוד שקופה)
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
 
-      // 5. חשיפת המפה הממוקמת
+      // 5. חשיפת המפה ב-Fade In
       setTimeout(() => {
         mapContainer.classList.add('loaded');
       }, 150);
 
-      // הוספת חצים
+      // הוספת חצים לכיוון הריצה
       L.polylineDecorator(polyline, {
         patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff', weight: 2 } }) }]
       }).addTo(map);
     }
 
+    // הגדרת כפתור ההורדה
     if (route.gpx_file) {
-      const btn = document.getElementById('downloadBtn');
-      btn.style.cursor = 'pointer';
-      btn.onclick = () => window.location.href = `data/${route.gpx_file}`;
+      document.getElementById('downloadBtn').onclick = () => window.location.href = `data/${route.gpx_file}`;
+      document.getElementById('downloadBtn').style.cursor = 'pointer';
     }
 
   } catch (err) {
     console.error(err);
-    document.getElementById('routeDescription').textContent = "שגיאה בטעינת נתוני המסלול.";
     mapContainer.classList.add('loaded');
   }
 });
