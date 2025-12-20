@@ -101,7 +101,7 @@
       color: #444;
     }
     
-    ..rp-btn {
+    .rp-btn {
       display: block;          /* 👈 לא inline */
       width: 100%;             /* 👈 רוחב מלא */
       box-sizing: border-box;
@@ -123,6 +123,8 @@
     
     .rp-btn:hover { background: #b71c1c; }
 
+    .rp-meta:empty { display: none; }
+
   </style>
 </head>
 
@@ -130,7 +132,7 @@
 <div id="app">
   <div id="map"></div>
   <div id="sidebar">
-    <div style="font-weight:800; margin-bottom:8px;">2מסלולים</div>
+    <div style="font-weight:800; margin-bottom:8px;">3מסלולים</div>
     <div id="routesList"></div>
     <div class="status" id="status">טוען…</div>
   </div>
@@ -182,6 +184,8 @@
   }
   
   closeEl.addEventListener('click', hidePreview);
+
+  map.on('click', () => hidePreview());
 
   if (!window.L) {
     statusEl.textContent = 'Leaflet לא נטען';
@@ -271,6 +275,31 @@ backControl.addTo(map);
   // ===== ציור מסלולים =====
   const routeMap = {};
 
+  // ===== Styles + selection =====
+  const DEFAULT_STYLE  = { weight: 4, opacity: 0.85 };
+  const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
+  
+  let selectedRouteId = null;
+  
+  function selectRoute(routeId, doFit = false) {
+    const line = routeMap[routeId];
+    if (!line) return;
+  
+    // החזרת הקודם לברירת מחדל
+    if (selectedRouteId && routeMap[selectedRouteId]) {
+      routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
+    }
+  
+    // הדגשת הנבחר
+    selectedRouteId = routeId;
+    line.setStyle(SELECTED_STYLE);
+    line.bringToFront();
+  
+    if (doFit) {
+      map.fitBounds(line.getBounds(), { padding: [30, 30] });
+    }
+}
+
   for (const r of routes) {
     try {
       const geom = await loadJSON(`data/${r.geometry_file}`);
@@ -288,6 +317,12 @@ backControl.addTo(map);
       line.bindTooltip(r.name, { sticky: true });
 
       routeMap[r.id] = line;
+
+      line.on('click', () => {
+        selectRoute(r.id, true);     // מיקוד + הדגשה
+        showPreview(r.id, routes);   // פתיחת הכרטיס
+      });
+
 
     } catch (e) {
       console.warn('Route failed:', r.id, e.message);
@@ -316,12 +351,10 @@ backControl.addTo(map);
         item.textContent = r.name;
 
         item.onclick = () => {
-          const line = routeMap[r.id];
-          if (!line) return;
-        
-          map.fitBounds(line.getBounds(), { padding: [30, 30] });
-          showPreview(r.id, routes);
+          selectRoute(r.id, true);     // מיקוד + הדגשה
+          showPreview(r.id, routes);   // פתיחת הכרטיס
         };
+
 
         listEl.appendChild(item);
       });
