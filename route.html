@@ -93,8 +93,40 @@
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elev_gain_m || '--'} מ'`;
     document.getElementById('routeDescription').textContent = route.description || '';
 
-    const map = L.map('map');
-    L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', { maxZoom: 16 }).addTo(map);
+    // 2. אתחול המפה עם תפריט שכבות (זהה לחלוטין לקובץ האינדקס)
+    const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
+      maxZoom: 16, attribution: '© Israel Hiking Map'
+    });
+    
+    const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17, attribution: '© OpenTopoMap'
+    });
+
+    const satellite = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Tiles © Esri' }
+    );
+    
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '© OpenStreetMap'
+    });
+
+    // יצירת המפה עם הגדרת IHM כברירת מחדל
+    const map = L.map('map', { 
+      layers: [ihm] 
+    });
+
+    // הוספת תפריט בחירת המפות עם השמות המדויקים מהאינדקס
+    L.control.layers(
+      { 
+        'סימון שבילים (IHM)': ihm, 
+        'טופוגרפי': topo, 
+        'לוויין': satellite, 
+        'מפת רחובות (OSM)': osm 
+      },
+      null,
+      { position: 'topright' }
+    ).addTo(map);
 
     const geom = await loadJSON(`data/${route.geometry_file}`);
     
