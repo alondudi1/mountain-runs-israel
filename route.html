@@ -91,7 +91,20 @@
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
     document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance_km || '--'} ק"מ`;
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elev_gain_m || '--'} מ'`;
-    document.getElementById('routeDescription').textContent = route.description || '';
+    // טעינת תיאור המסלול מקובץ חיצוני
+    if (route.description_file) {
+      try {
+        const descRes = await fetch(`data/descriptions/${route.description_file}`);
+        if (descRes.ok) {
+          const descHtml = await descRes.text();
+          document.getElementById('routeDescription').innerHTML = descHtml;
+        } else {
+          document.getElementById('routeDescription').textContent = "לא נמצא קובץ תיאור.";
+        }
+      } catch (e) {
+        console.error("שגיאה בטעינת התיאור:", e);
+      }
+    }
 
     // 2. אתחול המפה עם תפריט שכבות (זהה לחלוטין לקובץ האינדקס)
     const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
