@@ -53,6 +53,70 @@
     .leaflet-top.leaflet-left .leaflet-control {
       margin-bottom: 6px;
     }
+    /* ===== Preview Card ===== */
+    .route-preview {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 360px;
+      max-width: calc(100% - 32px);
+    
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      padding: 12px;
+    
+      z-index: 1200;
+    
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.35s ease, opacity 0.25s ease;
+    }
+    
+    .route-preview.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .route-preview.hidden { display: none; }
+    
+    .rp-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    
+    .rp-title { font-weight: 800; font-size: 15px; margin-bottom: 4px; }
+    .rp-meta  { font-size: 12px; color: #666; line-height: 1.3; }
+    
+    .rp-close {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 20px;
+      padding: 4px 6px;
+      color: #444;
+    }
+    
+    .rp-btn {
+      display: inline-block;      /* לא רחב מדי */
+      margin-top: 10px;
+      padding: 8px 12px;
+    
+      background: #d32f2f;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    }
+    
+    .rp-btn:hover { background: #b71c1c; }
 
   </style>
 </head>
@@ -67,11 +131,55 @@
   </div>
 </div>
 
+  <!-- Route Preview Card -->
+  <div id="routePreview" class="route-preview hidden">
+    <div class="rp-top">
+      <div class="rp-text">
+        <div id="previewTitle" class="rp-title"></div>
+        <div id="previewMeta" class="rp-meta"></div>
+      </div>
+      <button id="previewClose" class="rp-close" title="סגור">×</button>
+    </div>
+  
+    <a id="previewBtn" class="rp-btn" href="#">לפרטי המסלול →</a>
+  </div>
+
 <script>
 (async function () {
 
   const statusEl = document.getElementById('status');
   const listEl   = document.getElementById('routesList');
+
+  // ===== Preview Card refs =====
+  const preview = document.getElementById('routePreview');
+  const titleEl = document.getElementById('previewTitle');
+  const metaEl  = document.getElementById('previewMeta');
+  const btnEl   = document.getElementById('previewBtn');
+  const closeEl = document.getElementById('previewClose');
+  
+  function hidePreview() {
+    preview.classList.remove('show');
+    setTimeout(() => preview.classList.add('hidden'), 250);
+  }
+  
+  function showPreview(routeId, routes) {
+    const r = routes.find(x => x.id === routeId);
+    if (!r) return;
+  
+    titleEl.textContent = r.name || routeId;
+  
+    const parts = [];
+    if (r.region) parts.push(r.region);
+    if (r.distance_km) parts.push(`${r.distance_km} ק"מ`);
+    metaEl.textContent = parts.join(' • ');
+  
+    btnEl.href = `route.html?id=${encodeURIComponent(routeId)}`;
+  
+    preview.classList.remove('hidden');
+    requestAnimationFrame(() => preview.classList.add('show'));
+  }
+  
+  closeEl.addEventListener('click', hidePreview);
 
   if (!window.L) {
     statusEl.textContent = 'Leaflet לא נטען';
@@ -208,7 +316,9 @@ backControl.addTo(map);
         item.onclick = () => {
           const line = routeMap[r.id];
           if (!line) return;
+        
           map.fitBounds(line.getBounds(), { padding: [30, 30] });
+          showPreview(r.id, routes);
         };
 
         listEl.appendChild(item);
