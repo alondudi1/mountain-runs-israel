@@ -103,24 +103,22 @@
       const latlngs = [];
       const distances = [0];
       const elevations = [];
-      const slopes = [0]; // מערך חדש לשיפועים
+      const slopes = [0];
       let totalDist = 0;
 
       coords.forEach((point, i) => {
         const [lon, lat, ele] = point;
         const currentPt = L.latLng(lat, lon);
         const currentEle = ele || 0;
-        
         latlngs.push(currentPt);
         elevations.push(currentEle);
 
         if (i > 0) {
           const prevPt = L.latLng(coords[i-1][1], coords[i-1][0]);
-          const dMeters = prevPt.distanceTo(currentPt); // מרחק במטרים בין נקודות
+          const dMeters = prevPt.distanceTo(currentPt);
           totalDist += dMeters / 1000;
           distances.push(totalDist.toFixed(2));
           
-          // חישוב שיפוע: (הפרש גובה חלקי הפרש מרחק) כפול 100
           const dEle = currentEle - elevations[i-1];
           const s = dMeters > 0 ? (dEle / dMeters) * 100 : 0;
           slopes.push(s.toFixed(1));
@@ -130,16 +128,16 @@
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
 
-      // סמן מפה עם Tooltip מובנה
       const hoverMarker = L.circleMarker([0, 0], {
         radius: 8, color: '#222', weight: 3, fillColor: '#fff', fillOpacity: 1
       }).addTo(map);
       hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
       hoverMarker.bindTooltip("", { sticky: false, direction: 'top', offset: [0, -10] });
 
-      const ctx = document.getElementById('elevationChart').getContext('2d');
+      const canvas = document.getElementById('elevationChart');
+      const ctx = canvas.getContext('2d');
       
-      new Chart(ctx, {
+      const chart = new Chart(ctx, {
         type: 'line',
         data: {
           labels: distances,
@@ -161,8 +159,8 @@
             legend: { display: false },
             tooltip: { 
               enabled: true,
+              displayColors: false, // <-- זה מבטל את הריבוע האדום המיותר
               callbacks: {
-                // הוספת יחידות מידה לגרף
                 title: (items) => `מרחק: ${items[0].label} ק"מ`,
                 label: (ctx) => {
                   const idx = ctx.dataIndex;
@@ -181,16 +179,12 @@
               if (latlng) {
                 hoverMarker.setLatLng(latlng);
                 hoverMarker.setStyle({ opacity: 1, fillOpacity: 1 });
-                // עדכון הטקסט על המפה עם יחידות
                 hoverMarker.setTooltipContent(`
                   <b>${distances[idx]} ק"מ</b><br>
                   גובה: ${elevations[idx]} מ'<br>
                   שיפוע: ${slopes[idx]}%
                 `).openTooltip();
               }
-            } else {
-              hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
-              hoverMarker.closeTooltip();
             }
           },
           scales: {
@@ -198,6 +192,13 @@
             y: { title: { display: true, text: 'גובה (מטר)' } }
           }
         }
+      });
+
+      // פתרון לבעיית המרקר שנשאר על המפה:
+      // מאזין לרגע שהעכבר יוצא מכל שטח הקנבס של הגרף
+      canvas.addEventListener('mouseleave', () => {
+        hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
+        hoverMarker.closeTooltip();
       });
 
       setTimeout(() => mapContainer.classList.add('loaded'), 150);
