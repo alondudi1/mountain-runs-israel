@@ -185,8 +185,7 @@
   
   closeEl.addEventListener('click', hidePreview);
 
-  map.on('click', () => hidePreview());
-
+  
   if (!window.L) {
     statusEl.textContent = 'Leaflet לא נטען';
     return;
@@ -196,6 +195,8 @@
   const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
 
   const map = L.map('map').setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+
+  map.on('click', () => hidePreview());
 
   // ===== כפתור חזרה לתצוגת פתיחה =====
   const backControl = L.control({ position: 'topleft' });
