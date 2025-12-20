@@ -86,7 +86,6 @@
       return;
     }
 
-    document.title = route.name;
     document.getElementById('routeName').textContent = route.name;
     document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
@@ -104,32 +103,42 @@
       const latlngs = [];
       const distances = [0];
       const elevations = [];
+      const slopes = [0]; // מערך חדש לשיפועים
       let totalDist = 0;
 
       coords.forEach((point, i) => {
         const [lon, lat, ele] = point;
         const currentPt = L.latLng(lat, lon);
+        const currentEle = ele || 0;
+        
         latlngs.push(currentPt);
-        elevations.push(ele || 0);
+        elevations.push(currentEle);
 
         if (i > 0) {
           const prevPt = L.latLng(coords[i-1][1], coords[i-1][0]);
-          totalDist += prevPt.distanceTo(currentPt) / 1000;
+          const dMeters = prevPt.distanceTo(currentPt); // מרחק במטרים בין נקודות
+          totalDist += dMeters / 1000;
           distances.push(totalDist.toFixed(2));
+          
+          // חישוב שיפוע: (הפרש גובה חלקי הפרש מרחק) כפול 100
+          const dEle = currentEle - elevations[i-1];
+          const s = dMeters > 0 ? (dEle / dMeters) * 100 : 0;
+          slopes.push(s.toFixed(1));
         }
       });
 
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
 
+      // סמן מפה עם Tooltip מובנה
       const hoverMarker = L.circleMarker([0, 0], {
         radius: 8, color: '#222', weight: 3, fillColor: '#fff', fillOpacity: 1
       }).addTo(map);
       hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
+      hoverMarker.bindTooltip("", { sticky: false, direction: 'top', offset: [0, -10] });
 
       const ctx = document.getElementById('elevationChart').getContext('2d');
       
-      // הגדרות אינטראקציה משופרות
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -147,41 +156,51 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          // --- שינוי קריטי כאן: הגדרות אינטראקציה ---
-          interaction: {
-            mode: 'index',      // מחפש לפי המיקום על ציר ה-X (ק"מ)
-            intersect: false    // מאפשר לזהות נקודה גם אם העכבר לא נוגע בקו האדום
-          },
+          interaction: { mode: 'index', intersect: false },
           plugins: { 
             legend: { display: false },
             tooltip: { 
               enabled: true,
-              mode: 'index',
-              intersect: false
+              callbacks: {
+                // הוספת יחידות מידה לגרף
+                title: (items) => `מרחק: ${items[0].label} ק"מ`,
+                label: (ctx) => {
+                  const idx = ctx.dataIndex;
+                  return [
+                    `גובה: ${ctx.raw} מטר`,
+                    `שיפוע: ${slopes[idx]}%`
+                  ];
+                }
+              }
             }
           },
           onHover: (event, activeElements) => {
-            // עכשיו activeElements יכיל את הנקודה הקרובה ביותר בכל מקום בגרף
             if (activeElements.length > 0) {
-              const index = activeElements[0].index;
-              const latlng = latlngs[index];
+              const idx = activeElements[0].index;
+              const latlng = latlngs[idx];
               if (latlng) {
                 hoverMarker.setLatLng(latlng);
                 hoverMarker.setStyle({ opacity: 1, fillOpacity: 1 });
+                // עדכון הטקסט על המפה עם יחידות
+                hoverMarker.setTooltipContent(`
+                  <b>${distances[idx]} ק"מ</b><br>
+                  גובה: ${elevations[idx]} מ'<br>
+                  שיפוע: ${slopes[idx]}%
+                `).openTooltip();
               }
             } else {
               hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
+              hoverMarker.closeTooltip();
             }
           },
           scales: {
-            x: { title: { display: true, text: 'ק"מ' }, ticks: { maxTicksLimit: 10 } },
-            y: { title: { display: true, text: 'גובה (מ\')' } }
+            x: { title: { display: true, text: 'מרחק (ק"מ)' }, ticks: { maxTicksLimit: 10 } },
+            y: { title: { display: true, text: 'גובה (מטר)' } }
           }
         }
       });
 
       setTimeout(() => mapContainer.classList.add('loaded'), 150);
-
       L.polylineDecorator(polyline, {
         patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff', weight: 2 } }) }]
       }).addTo(map);
