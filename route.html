@@ -107,7 +107,7 @@
       return;
     }
 
-    // 2. עדכון פרטי הטקסט בדף
+    // 2. עדכון פרטי הטקסט
     document.title = route.name;
     document.getElementById('routeName').textContent = route.name;
     document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
@@ -116,19 +116,37 @@
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elevation || '--'} מ'`;
     document.getElementById('routeDescription').textContent = route.description || 'אין תיאור זמין למסלול זה.';
 
-    // 3. אתחול המפה (ללא setView התחלתי כדי למנוע טעינה מיותרת)
+    // 3. אתחול המפה
     const map = L.map('map');
 
+    // הגדרת כל השכבות כפי שהן מופיעות בדף הראשי
     const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
       maxZoom: 16,
       attribution: '© Israel Hiking Map'
-    }).addTo(map);
+    }).addTo(map); // ברירת המחדל
 
-    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '© Esri'
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
     });
 
-    L.control.layers({ "שבילים (IHM)": ihm, "לוויין": satellite }, null, { position: 'topright' }).addTo(map);
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19,
+      attribution: 'Tiles © Esri'
+    });
+
+    const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17,
+      attribution: '© OpenTopoMap'
+    });
+
+    // הוספת תפריט השכבות
+    L.control.layers({ 
+      "שבילים (IHM)": ihm, 
+      "רחובות (OSM)": osm,
+      "לוויין": satellite,
+      "טופוגרפי": topo
+    }, null, { position: 'topright' }).addTo(map);
 
     // 4. טעינת הגיאומטריה ומיקוד המפה
     const geom = await loadJSON(`data/${route.geometry_file}`);
@@ -137,21 +155,20 @@
       const latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
 
-      // מיקוד מיידי ללא אנימציה (מתבצע כשהמפה ב-opacity: 0)
+      // מיקוד מיידי (מתבצע כשהמפה עוד שקופה)
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
 
-      // 5. חשיפת המפה - עכשיו כשהיא כבר ממוקמת נכון על המסלול
+      // 5. חשיפת המפה הממוקמת
       setTimeout(() => {
         mapContainer.classList.add('loaded');
       }, 150);
 
-      // הוספת חצים לכיוון
+      // הוספת חצים
       L.polylineDecorator(polyline, {
         patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff', weight: 2 } }) }]
       }).addTo(map);
     }
 
-    // כפתור הורדה
     if (route.gpx_file) {
       const btn = document.getElementById('downloadBtn');
       btn.style.cursor = 'pointer';
@@ -161,7 +178,7 @@
   } catch (err) {
     console.error(err);
     document.getElementById('routeDescription').textContent = "שגיאה בטעינת נתוני המסלול.";
-    mapContainer.classList.add('loaded'); // חשיפת המפה גם בשגיאה למניעת מסך לבן
+    mapContainer.classList.add('loaded');
   }
 });
 </script>
