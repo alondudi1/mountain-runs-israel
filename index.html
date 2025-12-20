@@ -132,7 +132,7 @@
 <div id="app">
   <div id="map"></div>
   <div id="sidebar">
-    <div style="font-weight:800; margin-bottom:8px;">4מסלולים</div>
+    <div style="font-weight:800; margin-bottom:8px;">5מסלולים</div>
     <div id="routesList"></div>
     <div class="status" id="status">טוען…</div>
   </div>
@@ -319,7 +319,10 @@ backControl.addTo(map);
 
       routeMap[r.id] = line;
 
-      line.on('click', () => {
+      line.on('click', (e) => {
+  // השורה הזו היא הקסם - היא מונעת מהלחיצה להגיע למפה
+        L.DomEvent.stopPropagation(e); 
+        
         selectRoute(r.id, true);     // מיקוד + הדגשה
         showPreview(r.id, routes);   // פתיחת הכרטיס
       });
