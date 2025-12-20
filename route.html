@@ -7,7 +7,6 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -17,31 +16,17 @@
     .container { max-width: 1100px; margin: auto; padding: 16px; }
     .hero { margin-bottom: 12px; position: relative; }
     .hero h1 { margin: 0; font-size: 26px; }
-    #map { height: 420px; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    #map { height: 420px; border-radius: 12px; overflow: hidden; margin-bottom: 20px; opacity: 0; transition: opacity 0.8s ease-in-out; background: #f0f0f0; }
+    #map.loaded { opacity: 1; }
     .content { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
     @media (max-width: 800px) { .content { grid-template-columns: 1fr; } }
     .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
     .card h3 { margin-top: 0; }
     .info-item { margin-bottom: 8px; font-size: 14px; }
-    .download { margin-top: 16px; padding: 12px; text-align: center; border: 1px dashed #bbb; border-radius: 10px; color: #777; transition: all 0.3s; }
+    .download { margin-top: 16px; padding: 12px; text-align: center; border: 1px dashed #bbb; border-radius: 10px; color: #777; cursor: pointer; transition: all 0.3s; }
     .elevation-card { margin: 16px 0 24px; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
     .elevation-title { font-weight: 700; margin-bottom: 8px; }
-    .elevation-placeholder { height: 120px; background: #f9f9f9; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #888; font-size: 14px; text-align: center; }
     .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-
-    /* הגדרות להופעה חלקה של המפה */
-    #map { 
-      height: 420px; 
-      border-radius: 12px; 
-      overflow: hidden; 
-      margin-bottom: 20px; 
-      opacity: 0; 
-      transition: opacity 0.8s ease-in-out;
-      background: #f0f0f0;
-    }
-    #map.loaded { 
-      opacity: 1; 
-    }
   </style>
 </head>
 
@@ -56,7 +41,7 @@
   <div id="map"></div>
 
   <div id="elevation" class="elevation-card">
-    <div class="elevation-title">פרופיל גבהים</div>
+    <div class="elevation-title">פרופיל גבהים (העבר עכבר לסנכרון עם המפה)</div>
     <div style="height: 180px; position: relative;">
       <canvas id="elevationChart"></canvas>
     </div>
@@ -80,11 +65,9 @@
 </div>
 
 <script>
-   
  window.addEventListener('load', async () => {
   const mapContainer = document.getElementById('map');
   
-  // פונקציית עזר לטעינת קבצי JSON
   async function loadJSON(path) {
     const res = await fetch(path, { cache: 'no-store' });
     if (!res.ok) throw new Error(`נכשל בטעינה: ${path}`);
@@ -95,7 +78,6 @@
   const routeId = params.get('id');
 
   try {
-    // 1. טעינת נתוני המסלול מה-JSON הראשי
     const routes = await loadJSON('data/routes.json');
     const route = routes.find(r => r.id === routeId);
 
@@ -104,7 +86,6 @@
       return;
     }
 
-    // עדכון כותרות ונתונים בדף
     document.title = route.name;
     document.getElementById('routeName').textContent = route.name;
     document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
@@ -113,24 +94,18 @@
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elev_gain_m || '--'} מ'`;
     document.getElementById('routeDescription').textContent = route.description || '';
 
-    // 2. אתחול המפה
     const map = L.map('map');
-    L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
-      maxZoom: 16,
-      attribution: '© Israel Hiking Map'
-    }).addTo(map);
+    L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', { maxZoom: 16 }).addTo(map);
 
-    // 3. טעינת הגיאומטריה (הקובץ החדש עם הגובה)
     const geom = await loadJSON(`data/${route.geometry_file}`);
     
     if (geom && geom.coordinates) {
-      const coords = geom.coordinates; // מבנה: [lon, lat, ele]
+      const coords = geom.coordinates; 
       const latlngs = [];
       const distances = [0];
       const elevations = [];
       let totalDist = 0;
 
-      // עיבוד הנקודות למפה ולגרף
       coords.forEach((point, i) => {
         const [lon, lat, ele] = point;
         const currentPt = L.latLng(lat, lon);
@@ -144,24 +119,22 @@
         }
       });
 
-      // שרטוט המסלול על המפה
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
 
-      // יצירת סמן "מרחף" שיופיע בזמן מעבר על הגרף
       const hoverMarker = L.circleMarker([0, 0], {
-        radius: 7, color: '#222', weight: 2, fillColor: '#fff', fillOpacity: 1
+        radius: 8, color: '#222', weight: 3, fillColor: '#fff', fillOpacity: 1
       }).addTo(map);
-      hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 }); // מוסתר בהתחלה
+      hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
 
-      // 4. יצירת גרף הגבהים עם סנכרון למפה
       const ctx = document.getElementById('elevationChart').getContext('2d');
+      
+      // הגדרות אינטראקציה משופרות
       new Chart(ctx, {
         type: 'line',
         data: {
           labels: distances,
           datasets: [{
-            label: 'גובה (מטרים)',
             data: elevations,
             borderColor: '#d32f2f',
             backgroundColor: 'rgba(211, 47, 47, 0.1)',
@@ -174,12 +147,21 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          // --- שינוי קריטי כאן: הגדרות אינטראקציה ---
+          interaction: {
+            mode: 'index',      // מחפש לפי המיקום על ציר ה-X (ק"מ)
+            intersect: false    // מאפשר לזהות נקודה גם אם העכבר לא נוגע בקו האדום
+          },
           plugins: { 
             legend: { display: false },
-            tooltip: { mode: 'index', intersect: false }
+            tooltip: { 
+              enabled: true,
+              mode: 'index',
+              intersect: false
+            }
           },
-          // פונקציית הסנכרון: כשמזיזים עכבר על הגרף, הסמן במפה זז
           onHover: (event, activeElements) => {
+            // עכשיו activeElements יכיל את הנקודה הקרובה ביותר בכל מקום בגרף
             if (activeElements.length > 0) {
               const index = activeElements[0].index;
               const latlng = latlngs[index];
@@ -198,20 +180,15 @@
         }
       });
 
-      // חשיפת המפה ב-Fade In
       setTimeout(() => mapContainer.classList.add('loaded'), 150);
 
-      // הוספת חצים לכיוון הריצה
       L.polylineDecorator(polyline, {
         patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff', weight: 2 } }) }]
       }).addTo(map);
     }
 
-    // הגדרת כפתור ההורדה
     if (route.gpx_file) {
-      const btn = document.getElementById('downloadBtn');
-      btn.style.cursor = 'pointer';
-      btn.onclick = () => window.location.href = `data/${route.gpx_file}`;
+      document.getElementById('downloadBtn').onclick = () => window.location.href = `data/${route.gpx_file}`;
     }
 
   } catch (err) {
@@ -219,7 +196,6 @@
     mapContainer.classList.add('loaded');
   }
 });
-
 </script>
 
 </body>
