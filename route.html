@@ -34,19 +34,9 @@
       border-radius: 12px; 
       overflow: hidden; 
       margin-bottom: 20px; 
-      opacity: 0; /* המפה מתחילה שקופה */
-      transition: opacity 0.8s ease-in-out; /* אפקט חשיפה של 0.8 שניות */
-    }
-    
-    /* כשהמפה נטענת וממוקמת, נוסיף לה את המחלקה הזו דרך ה-JS */
-    #map.loaded { 
-      opacity: 1; 
-    }
-
-    /* הוספה: הגדרות למפה חלקה */
-    #map { 
       opacity: 0; 
-      transition: opacity 0.8s ease-in-out; 
+      transition: opacity 0.8s ease-in-out;
+      background: #f0f0f0;
     }
     #map.loaded { 
       opacity: 1; 
@@ -118,8 +108,8 @@
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
     
     // שליפת המרחק והטיפוס מה-JSON
-    document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance || '--'} ק"מ`;
-    document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elevation || '--'} מ'`;
+    document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance_km || '--'} ק"מ`;
+    document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.eleva_gain_m || '--'} מ'`;
     
     document.getElementById('routeDescription').textContent = route.description || 'אין תיאור זמין למסלול זה.';
 
