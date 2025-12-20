@@ -227,7 +227,7 @@
 
 backControl.addTo(map);
 
-  // ===== שכבות מפה (Base Layers) =====
+ // ===== שכבות מפה (Base Layers) =====
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
@@ -240,15 +240,26 @@ backControl.addTo(map);
   
   const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
     maxZoom: 17,
-    attribution: '© OpenTopoMap (SRTM, OSM contributors)'
+    attribution: '© OpenTopoMap'
   });
+
+  // הוספת מפת סימון שבילים (IHM)
+  const ihm = L.tileLayer('https://israelhiking.osm.org.il/tiles/IsraelHiking/{z}/{x}/{y}.png', {
+    maxZoom: 16,
+    attribution: '© Israel Hiking Map'
+  });
+
+  // הגדרת IHM כברירת מחדל שנטענת ראשונה
+  ihm.addTo(map);
   
-  // ברירת מחדל: osm
-  osm.addTo(map);
-  
-  // תפריט בחירת מפות – ימין למעלה
+  // תפריט בחירת מפות מעודכן
   L.control.layers(
-    { 'טופוגרפי': topo, 'לוויין': satellite, 'מפה': osm },
+    { 
+      'סימון שבילים (IHM)': ihm, 
+      'טופוגרפי': topo, 
+      'לוויין': satellite, 
+      'מפת רחובות (OSM)': osm 
+    },
     null,
     { position: 'topright' }
   ).addTo(map);
