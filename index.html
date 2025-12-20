@@ -101,20 +101,25 @@
       color: #444;
     }
     
-    .rp-btn {
-      display: inline-block;      /* לא רחב מדי */
+    ..rp-btn {
+      display: block;          /* 👈 לא inline */
+      width: 100%;             /* 👈 רוחב מלא */
+      box-sizing: border-box;
+    
       margin-top: 10px;
-      padding: 8px 12px;
+      padding: 10px 12px;
     
       background: #d32f2f;
       color: #fff;
       text-decoration: none;
       font-weight: 700;
       font-size: 14px;
+      text-align: center;
     
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,.2);
     }
+
     
     .rp-btn:hover { background: #b71c1c; }
 
