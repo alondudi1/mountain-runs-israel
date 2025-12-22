@@ -5,7 +5,6 @@
   <title>Mountain Runs Israel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -21,6 +20,15 @@
       overflow-y: auto;
       background: #fff;
       box-sizing: border-box;
+    }
+
+    /* התוספת היחידה ב-CSS: הגדרת גודל ללוגו */
+    .sidebar-logo {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin-bottom: 15px;
+      border-radius: 8px;
     }
 
     .region-title {
@@ -102,8 +110,8 @@
     }
     
     .rp-btn {
-      display: block;          /* 👈 לא inline */
-      width: 100%;             /* 👈 רוחב מלא */
+      display: block;
+      width: 100%;
       box-sizing: border-box;
     
       margin-top: 10px;
@@ -120,19 +128,8 @@
       box-shadow: 0 2px 6px rgba(0,0,0,.2);
     }
 
-    
     .rp-btn:hover { background: #b71c1c; }
-
     .rp-meta:empty { display: none; }
-
-    .sidebar-logo {
-  width: 100%;
-  height: auto;
-  display: block;
-  margin-bottom: 15px;
-  border-radius: 8px; /* פינות מעוגלות עדינות */
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* הצללה קלה */
-}
 
   </style>
 </head>
@@ -140,23 +137,15 @@
 <body>
 <div id="app">
   <div id="map"></div>
-
   <div id="sidebar">
-  <img src="IMG_9648.jpg" alt="Run-IL Trail Bank" class="sidebar-logo">
-  
-  <div style="font-weight:800; margin-bottom:8px; padding-right:10px;">בנק המסלולים:</div>
-  <div id="routesList"></div>
-  <div class="status" id="status">טוען…</div>
-</div>
-  
-  <div id="sidebar">
+    <img src="IMG_9648.jpg" alt="Run-IL Trail Bank" class="sidebar-logo">
+    
     <div style="font-weight:800; margin-bottom:8px;">6מסלולים</div>
     <div id="routesList"></div>
     <div class="status" id="status">טוען…</div>
   </div>
 </div>
 
-  <!-- Route Preview Card -->
   <div id="routePreview" class="route-preview hidden">
     <div class="rp-top">
       <div class="rp-text">
@@ -193,8 +182,6 @@
   
     titleEl.textContent = r.name || routeId;
   
-    
-  
     btnEl.href = `route.html?id=${encodeURIComponent(routeId)}`;
   
     preview.classList.remove('hidden');
@@ -203,7 +190,6 @@
   
   closeEl.addEventListener('click', hidePreview);
 
-  
   if (!window.L) {
     statusEl.textContent = 'Leaflet לא נטען';
     return;
@@ -211,81 +197,46 @@
 
   // ===== מפה =====
   const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
-
   const map = L.map('map').setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
-
   map.on('click', () => hidePreview());
 
   // ===== כפתור חזרה לתצוגת פתיחה =====
   const backControl = L.control({ position: 'topleft' });
-  
   backControl.onAdd = function () {
     const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-  
     const btn = L.DomUtil.create('a', '', container);
     btn.href = '#';
     btn.title = 'חזרה לכל ישראל';
-    btn.innerHTML = '↺';   // אייקון חץ חזרה
+    btn.innerHTML = '↺';
     btn.style.fontSize = '18px';
     btn.style.lineHeight = '30px';
     btn.style.textAlign = 'center';
     btn.style.width = '30px';
     btn.style.height = '30px';
-  
-    // למנוע קליקים שמזיזים את המפה
     L.DomEvent.disableClickPropagation(container);
-  
     L.DomEvent.on(btn, 'click', (e) => {
       L.DomEvent.preventDefault(e);
       map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
     });
-  
     return container;
   };
+  backControl.addTo(map);
 
-backControl.addTo(map);
+  // ===== שכבות מפה (Base Layers) =====
+  const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
+    maxZoom: 16,
+    attribution: '© Israel Hiking Map'
+  }).addTo(map);
 
- // ===== שכבות מפה (Base Layers) =====
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   });
-  
-  const satellite = L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    { maxZoom: 19, attribution: 'Tiles © Esri' }
-  );
-  
-  const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-    maxZoom: 17,
-    attribution: '© OpenTopoMap'
-  });
 
-  // הוספת מפת סימון שבילים (IHM)
-  const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
-    maxZoom: 16,
-    attribution: '© Israel Hiking Map'
-  });
-
-  // הגדרת IHM כברירת מחדל שנטענת ראשונה
-  ihm.addTo(map);
-  
-  // תפריט בחירת מפות מעודכן
-  L.control.layers(
-    { 
-      'סימון שבילים (IHM)': ihm, 
-      'טופוגרפי': topo, 
-      'לוויין': satellite, 
-      'מפת רחובות (OSM)': osm 
-    },
-    null,
-    { position: 'topright' }
-  ).addTo(map);
-
+  L.control.layers({ 'סימון שבילים (IHM)': ihm, 'מפת רחובות (OSM)': osm }, null, { position: 'topright' }).addTo(map);
 
   const routesLayer = L.layerGroup().addTo(map);
 
-  // ===== טעינת JSON =====
   async function loadJSON(path) {
     const res = await fetch(path, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Failed to load ${path}`);
@@ -302,96 +253,67 @@ backControl.addTo(map);
 
   statusEl.textContent = `נטענו ${routes.length} מסלולים`;
 
-  // ===== ציור מסלולים =====
   const routeMap = {};
-
-  // ===== Styles + selection =====
   const DEFAULT_STYLE  = { weight: 4, opacity: 0.85 };
   const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
-  
   let selectedRouteId = null;
   
   function selectRoute(routeId, doFit = false) {
     const line = routeMap[routeId];
     if (!line) return;
-  
-    // החזרת הקודם לברירת מחדל
     if (selectedRouteId && routeMap[selectedRouteId]) {
       routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
     }
-  
-    // הדגשת הנבחר
     selectedRouteId = routeId;
     line.setStyle(SELECTED_STYLE);
     line.bringToFront();
-  
     if (doFit) {
       map.fitBounds(line.getBounds(), { padding: [30, 30] });
     }
-}
+  }
 
   for (const r of routes) {
     try {
       const geom = await loadJSON(`data/${r.geometry_file}`);
-
       if (!geom.coordinates) continue;
-
       const latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
       if (latlngs.length < 2) continue;
 
-      const line = L.polyline(latlngs, {
-        weight: 4,
-        opacity: 0.85
-      }).addTo(routesLayer);
-
+      const line = L.polyline(latlngs, { weight: 4, opacity: 0.85 }).addTo(routesLayer);
       line.bindTooltip(r.name, { sticky: true });
-
       routeMap[r.id] = line;
-
       line.on('click', (e) => {
-  // השורה הזו היא הקסם - היא מונעת מהלחיצה להגיע למפה
         L.DomEvent.stopPropagation(e); 
-        
-        selectRoute(r.id, true);     // מיקוד + הדגשה
-        showPreview(r.id, routes);   // פתיחת הכרטיס
+        selectRoute(r.id, true);
+        showPreview(r.id, routes);
       });
-
-
     } catch (e) {
       console.warn('Route failed:', r.id, e.message);
     }
   }
 
-  // ===== רשימה לפי אזור =====
   const byRegion = {};
   routes.forEach(r => {
     const region = r.region || 'לא משויך';
     (byRegion[region] = byRegion[region] || []).push(r);
   });
 
-  Object.keys(byRegion)
-    .sort((a, b) => a.localeCompare(b, 'he'))
-    .forEach(region => {
-
-      const title = document.createElement('div');
-      title.className = 'region-title';
-      title.textContent = region;
-      listEl.appendChild(title);
-
-      byRegion[region].forEach(r => {
-        const item = document.createElement('div');
-        item.className = 'route-item';
-        item.textContent = r.name;
-
-        item.onclick = () => {
-          selectRoute(r.id, true);     // מיקוד + הדגשה
-          showPreview(r.id, routes);   // פתיחת הכרטיס
-        };
-
-
-        listEl.appendChild(item);
-      });
+  Object.keys(byRegion).sort((a, b) => a.localeCompare(b, 'he')).forEach(region => {
+    const title = document.createElement('div');
+    title.className = 'region-title';
+    title.textContent = region;
+    listEl.appendChild(title);
+    byRegion[region].forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'route-item';
+      item.textContent = r.name;
+      item.onclick = () => {
+        selectRoute(r.id, true);
+        showPreview(r.id, routes);
+      };
+      listEl.appendChild(item);
     });
+  });
 
 })();
 </script>
