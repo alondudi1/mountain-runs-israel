@@ -125,12 +125,30 @@
 
     .rp-meta:empty { display: none; }
 
+    .sidebar-logo {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-bottom: 15px;
+  border-radius: 8px; /* פינות מעוגלות עדינות */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* הצללה קלה */
+}
+
   </style>
 </head>
 
 <body>
 <div id="app">
   <div id="map"></div>
+
+  <div id="sidebar">
+  <img src="IMG_9648.jpg" alt="Run-IL Trail Bank" class="sidebar-logo">
+  
+  <div style="font-weight:800; margin-bottom:8px; padding-right:10px;">בנק המסלולים:</div>
+  <div id="routesList"></div>
+  <div class="status" id="status">טוען…</div>
+</div>
+  
   <div id="sidebar">
     <div style="font-weight:800; margin-bottom:8px;">6מסלולים</div>
     <div id="routesList"></div>
