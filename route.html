@@ -30,6 +30,18 @@
     .elevation-card { margin: 16px 0 24px; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
     .elevation-title { font-weight: 700; margin-bottom: 8px; }
     .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+    
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url('IMG_9648.jpeg');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain; /* הלוגו ישמור על צורתו המקורית */
+      opacity: 0.05; /* שקיפות גבוהה מאוד - 5% בלבד */
+      z-index: -1; /* מבטיח שהרקע יהיה מאחורי הכל */
+    }
   </style>
 </head>
 
