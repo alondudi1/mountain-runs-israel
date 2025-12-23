@@ -16,6 +16,9 @@
     .container { max-width: 1100px; margin: auto; padding: 16px; }
     .hero { margin-bottom: 12px; position: relative; }
     .hero h1 { margin: 0; font-size: 26px; }
+    .hero { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; position: relative; }
+    .hero h1 { margin: 0; font-size: 26px; display: flex; align-items: center; gap: 10px; }
+    .route-logo { height: 45px; width: auto; object-fit: contain; }
     #map { height: 420px; border-radius: 12px; overflow: hidden; margin-bottom: 20px; opacity: 0; transition: opacity 0.8s ease-in-out; background: #f0f0f0; }
     #map.loaded { opacity: 1; }
     .content { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
@@ -35,7 +38,11 @@
 <div class="container">
   <div class="hero">
     <a href="index.html" class="back-link">← חזרה</a>
-    <h1 id="routeName">טוען מסלול…</h1>
+    <h1 id="routeName">
+      <img src="data/IMG_9648.jpeg" alt="Mountain Runs Israel Logo" class="route-logo">
+      <span id="routeNameText">טוען מסלול…</span>
+    </h1>
+  </div>
   </div>
 
   <div id="map"></div>
@@ -82,7 +89,7 @@
     const route = routes.find(r => r.id === routeId);
 
     if (!route) {
-      document.getElementById('routeName').textContent = "מסלול לא נמצא";
+      document.getElementById('routeNameText').textContent = route.name;
       return;
     }
 
