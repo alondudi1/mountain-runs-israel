@@ -279,9 +279,18 @@
       }).addTo(map);
     }
 
-    if (route.gpx_file) {
-      document.getElementById('downloadBtn').onclick = () => window.location.href = `data/${route.gpx_file}`;
-    }
+    // הגדרת כפתור ההורדה לפי המוסכמה: data/gpx/[ID].gpx
+    document.getElementById('downloadBtn').onclick = () => {
+      const gpxFilename = `${routeId}.gpx`;
+      const gpxPath = `data/gpx/${gpxFilename}`;
+      
+      const link = document.createElement('a');
+      link.href = gpxPath;
+      link.download = gpxFilename; // מכריח הורדה של הקובץ
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
 
   } catch (err) {
     console.error("שגיאה:", err);
