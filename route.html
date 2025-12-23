@@ -281,17 +281,18 @@
 
     // הגדרת כפתור ההורדה לפי המוסכמה: data/gpx/[ID].gpx
     document.getElementById('downloadBtn').onclick = () => {
-      const gpxFilename = `${routeId}.gpx`;
-      const gpxPath = `data/gpx/${gpxFilename}`;
-      
-      const link = document.createElement('a');
-      link.href = gpxPath;
-      link.download = gpxFilename; // מכריח הורדה של הקובץ
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    };
+  const gpxFilename = `${routeId}.gpx`;
+  const gpxPath = `data/gpx/${gpxFilename}`;
+  
+  console.log("מנסה להוריד קובץ מהנתיב:", gpxPath); // שורה לבדיקה
 
+  const link = document.createElement('a');
+  link.href = gpxPath;
+  link.download = gpxFilename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
   } catch (err) {
     console.error("שגיאה:", err);
     mapContainer.classList.add('loaded');
