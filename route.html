@@ -88,12 +88,13 @@
     const routes = await loadJSON('data/routes.json');
     const route = routes.find(r => r.id === routeId);
 
+    // בדיקה אם המסלול קיים במאגר
     if (!route) {
       document.getElementById('routeNameText').textContent = "מסלול לא נמצא";
       return;
     }
 
-    // עדכון הטקסט בלבד מבלי למחוק את הלוגו
+    // עדכון הטקסט בתוך ה-span בלבד כדי לשמור על הלוגו
     document.getElementById('routeNameText').textContent = route.name;
     document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
