@@ -39,7 +39,7 @@
   <div class="hero">
     <a href="index.html" class="back-link">← חזרה</a>
     <h1 id="routeName">
-      <img src="data/IMG_9648.jpeg" alt="Mountain Runs Israel Logo" class="route-logo">
+      <img src="IMG_9648.jpeg" alt="Mountain Runs Israel Logo" class="route-logo">
       <span id="routeNameText">טוען מסלול…</span>
     </h1>
   </div>
@@ -89,11 +89,12 @@
     const route = routes.find(r => r.id === routeId);
 
     if (!route) {
-      document.getElementById('routeNameText').textContent = route.name;
+      document.getElementById('routeNameText').textContent = "מסלול לא נמצא";
       return;
     }
 
-    document.getElementById('routeName').textContent = route.name;
+    // עדכון הטקסט בלבד מבלי למחוק את הלוגו
+    document.getElementById('routeNameText').textContent = route.name;
     document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
     document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance_km || '--'} ק"מ`;
