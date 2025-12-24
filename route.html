@@ -246,7 +246,7 @@
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
 
-      
+      loadWaypoints(map, routeId);
       
       const hoverMarker = L.circleMarker([0, 0], {
         radius: 8, color: '#222', weight: 3, fillColor: '#fff', fillOpacity: 1
