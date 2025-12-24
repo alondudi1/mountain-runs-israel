@@ -30,7 +30,25 @@
     .elevation-card { margin: 16px 0 24px; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
     .elevation-title { font-weight: 700; margin-bottom: 8px; }
     .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-    
+
+    /* עיצוב לתמונות בתוך בועות המידע */
+    .wpt-popup-content {
+      text-align: right;
+      direction: rtl;
+      max-width: 220px;
+    }
+    .wpt-img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .wpt-text {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #333;
+    }
     
   </style>
 </head>
@@ -81,6 +99,36 @@
     const res = await fetch(path, { cache: 'no-store' });
     if (!res.ok) throw new Error(`נכשל בטעינה: ${path}`);
     return res.json();
+  }
+
+  // פונקציה לטעינת נקודות העניין הכתומות
+  async function loadWaypoints(map, routeId) {
+    try {
+      const wpts = await loadJSON(`data/wpt/${routeId}.json`);
+      
+      wpts.forEach(item => {
+        // יצירת העיגול הכתום
+        const marker = L.circleMarker([item.lat, item.lng], {
+          radius: 8,
+          fillColor: "#FF8C00", // כתום תפוז
+          color: "#fff",        // מסגרת לבנה
+          weight: 2,
+          fillOpacity: 0.9
+        }).addTo(map);
+  
+        // ריחוף (Hover): מציג רק טקסט
+        marker.bindTooltip(item.content, { direction: 'top', offset: [0, -10] });
+  
+        // לחיצה (Click): מציג תמונה + טקסט
+        let popupHtml = `<div class="wpt-popup-content">`;
+        if (item.img) popupHtml += `<img src="${item.img}" class="wpt-img">`;
+        popupHtml += `<div class="wpt-text">${item.content}</div></div>`;
+        
+        marker.bindPopup(popupHtml);
+      });
+    } catch (e) {
+      console.log(`לא נמצא קובץ נקודות עניין למסלול זה.`);
+    }
   }
 
   const params = new URLSearchParams(window.location.search);
@@ -158,6 +206,36 @@
     ).addTo(map);
 
     const geom = await loadJSON(`data/${route.geometry_file}`);
+
+    // פונקציה לטעינת נקודות העניין הכתומות
+  async function loadWaypoints(map, routeId) {
+    try {
+      const wpts = await loadJSON(`data/wpt/${routeId}.json`);
+      
+      wpts.forEach(item => {
+        // יצירת העיגול הכתום
+        const marker = L.circleMarker([item.lat, item.lng], {
+          radius: 8,
+          fillColor: "#FF8C00", // כתום תפוז
+          color: "#fff",        // מסגרת לבנה
+          weight: 2,
+          fillOpacity: 0.9
+        }).addTo(map);
+  
+        // ריחוף (Hover): מציג רק טקסט
+        marker.bindTooltip(item.content, { direction: 'top', offset: [0, -10] });
+  
+        // לחיצה (Click): מציג תמונה + טקסט
+        let popupHtml = `<div class="wpt-popup-content">`;
+        if (item.img) popupHtml += `<img src="${item.img}" class="wpt-img">`;
+        popupHtml += `<div class="wpt-text">${item.content}</div></div>`;
+        
+        marker.bindPopup(popupHtml);
+      });
+    } catch (e) {
+      console.log(`לא נמצא קובץ נקודות עניין למסלול זה.`);
+    }
+  }
     
     if (geom && geom.coordinates) {
       const coords = geom.coordinates; 
@@ -201,6 +279,8 @@
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
       map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
 
+      loadWaypoints(map, routeId);
+      
       const hoverMarker = L.circleMarker([0, 0], {
         radius: 8, color: '#222', weight: 3, fillColor: '#fff', fillOpacity: 1
       }).addTo(map);
