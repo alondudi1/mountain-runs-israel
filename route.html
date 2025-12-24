@@ -111,12 +111,12 @@
     wpts.forEach((item, index) => {
       console.log(`מצייר נקודה ${index}:`, item.lat, item.lng);
       
-      cconst marker = L.circleMarker([item.lat, item.lng], {
-        radius: 10, // הגדלתי זמנית כדי שיהיה קל לראות
-        fillColor: "#FF8C00",
-        color: "#000",
-        weight: 3,
-        fillOpacity: 1
+      const marker = L.circleMarker([item.lat, item.lng], {
+        radius: 8,            // גודל העיגול (הקטנתי מעט חזרה)
+        fillColor: "#FF8C00", // צבע המילוי (כתום)
+        color: "#FF8C00",     // צבע המסגרת (עכשיו גם כתום)
+        weight: 2,            // עובי המסגרת (דק יותר)
+        fillOpacity: 0.2      // שקיפות המילוי (0.2 זה שקוף מאוד, 0 זה שקוף לגמרי)
       }).addTo(map);
       
       marker.bindTooltip(item.content);
