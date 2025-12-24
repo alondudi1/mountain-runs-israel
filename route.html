@@ -207,35 +207,7 @@
 
     const geom = await loadJSON(`data/${route.geometry_file}`);
 
-    // פונקציה לטעינת נקודות העניין הכתומות
-  async function loadWaypoints(map, routeId) {
-    try {
-      const wpts = await loadJSON(`data/wpt/${routeId}.json`);
-      
-      wpts.forEach(item => {
-        // יצירת העיגול הכתום
-        const marker = L.circleMarker([item.lat, item.lng], {
-          radius: 8,
-          fillColor: "#FF8C00", // כתום תפוז
-          color: "#fff",        // מסגרת לבנה
-          weight: 2,
-          fillOpacity: 0.9
-        }).addTo(map);
-  
-        // ריחוף (Hover): מציג רק טקסט
-        marker.bindTooltip(item.content, { direction: 'top', offset: [0, -10] });
-  
-        // לחיצה (Click): מציג תמונה + טקסט
-        let popupHtml = `<div class="wpt-popup-content">`;
-        if (item.img) popupHtml += `<img src="${item.img}" class="wpt-img">`;
-        popupHtml += `<div class="wpt-text">${item.content}</div></div>`;
-        
-        marker.bindPopup(popupHtml);
-      });
-    } catch (e) {
-      console.log(`לא נמצא קובץ נקודות עניין למסלול זה.`);
-    }
-  }
+    
     
     if (geom && geom.coordinates) {
       const coords = geom.coordinates; 
