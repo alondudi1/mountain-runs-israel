@@ -103,29 +103,39 @@
 
   // פונקציה לטעינת נקודות העניין הכתומות
   async function loadWaypoints(map, routeId) {
-  console.log("מנסה לטעון נקודות עבור:", routeId); // בדיקה שהפונקציה רצה
-  try {
-    const wpts = await loadJSON(`data/wpt/${routeId}.json`);
-    console.log("קובץ ה-WPT נטען בהצלחה. מספר נקודות:", wpts.length);
+    console.log("מנסה לטעון נקודות עבור:", routeId);
+    try {
+      const wpts = await loadJSON(`data/wpt/${routeId}.json`);
+      console.log("קובץ ה-WPT נטען בהצלחה. מספר נקודות:", wpts.length);
 
-    wpts.forEach((item, index) => {
-      console.log(`מצייר נקודה ${index}:`, item.lat, item.lng);
-      
-      const marker = L.circleMarker([item.lat, item.lng], {
-        radius: 8,            // גודל העיגול (הקטנתי מעט חזרה)
-        fillColor: "#FF8C00", // צבע המילוי (כתום)
-        color: "#FF8C00",     // צבע המסגרת (עכשיו גם כתום)
-        weight: 2,            // עובי המסגרת (דק יותר)
-        fillOpacity: 0.2      // שקיפות המילוי (0.2 זה שקוף מאוד, 0 זה שקוף לגמרי)
-      }).addTo(map);
-      
-      marker.bindTooltip(item.content);
-    });
-  } catch (e) {
-    console.error("שגיאה בטעינת ה-WPT:", e);
+      wpts.forEach((item, index) => {
+        console.log(`מצייר נקודה ${index}:`, item.lat, item.lng);
+        
+        const marker = L.circleMarker([item.lat, item.lng], {
+          radius: 8,
+          fillColor: "#FF8C00",
+          color: "#FF8C00",
+          weight: 2,
+          fillOpacity: 0.2
+        }).addTo(map);
+        
+        // זה מה שמציג את הטקסט בריחוף (קיים אצלך)
+        marker.bindTooltip(item.content);
+
+        // >>> כאן החלק החסר שיוצר את הבועה עם התמונה <<<
+        let popupHtml = `<div class="wpt-popup-content">`;
+        if (item.img) {
+          popupHtml += `<img src="${item.img}" class="wpt-img">`;
+        }
+        popupHtml += `<div class="wpt-text">${item.content}</div></div>`;
+        
+        marker.bindPopup(popupHtml);
+        // >>> סוף החלק שהוספנו <<<
+      });
+    } catch (e) {
+      console.error("שגיאה בטעינת ה-WPT:", e);
+    }
   }
-}
-
   const params = new URLSearchParams(window.location.search);
   const routeId = params.get('id');
 
