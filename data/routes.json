@@ -40,7 +40,7 @@
     "elev_gain_m": 750,
     "difficulty": 28,
     "geometry_file": "geometry/bokek21.json",
-    "description_file": "bokek.html",
+    "description_file": "bokek21.html",
     "is_premium": false
   }
 ]
