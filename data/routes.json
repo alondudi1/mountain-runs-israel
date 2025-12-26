@@ -1,26 +1,5 @@
 [
-  {
-    "id": "carmel_ridge_18k",
-    "name": "כרמל – רכס זורם (18 ק״מ)",
-    "region": "כרמל",
-    "distance_km": 18,
-    "elev_gain_m": 750,
-    "difficulty": 25,
-    "geometry_file": "geometry/carmel_ridge_18k.json",
-    "description_file": "carmel_ridge_18k.html",
-    "is_premium": false
-  },
-  {
-    "id": "jerusalem_ridge_22k",
-    "name": "הרי ירושלים – רכס שבור (22 ק״מ)",
-    "region": "הרי ירושלים",
-    "distance_km": 22,
-    "elev_gain_m": 900,
-    "difficulty": 31,
-    "geometry_file": "geometry/jerusalem_ridge_22k.json",
-    "description_file": "jerusalem_ridge_22k.html",
-    "is_premium": false
-  },
+ 
   {
     "id": "zarzar21",
     "name": "אטרקציות ביער מטע (20 ק״מ)",
