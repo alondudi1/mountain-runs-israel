@@ -29,25 +29,32 @@
     .elevation-title { font-weight: 700; margin-bottom: 8px; }
     .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); z-index: 1000; }
 
-    /* עיצוב לתמונות בתוך בועות המידע */
-    .wpt-popup-content { text-align: right; direction: rtl; }
+    /* עיצוב לתמונות ותוכן בתוך בועות */
+    .wpt-popup-content { text-align: center; direction: rtl; width: 200px; }
     .wpt-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 8px; display: block; }
     .wpt-text { font-size: 14px; line-height: 1.4; color: #333; }
 
     /* עיצוב אחיד וממורכז לבועות הריחוף (Tooltip) */
     .leaflet-tooltip.custom-tooltip-style {
         background-color: white !important;
-        border: 1px solid #FF8C00 !important;
+        border: 2px solid #FF8C00 !important;
         border-radius: 8px !important;
         padding: 10px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-        width: 220px; /* רוחב קבוע למרכוז מושלם */
-        white-space: normal !important; /* מאפשר ירידת שורה */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+        width: 220px !important; 
+        white-space: normal !important;
         opacity: 1 !important;
+        /* מחיקת שוליים שעלולים להסיט את הבועה בכיווניות RTL */
+        margin: 0 !important; 
+        pointer-events: none;
     }
 
-    /* ביטול החץ שעלול להסיט את הבועה הצידה */
+    /* ביטול החץ הקטן שמושך את הבועה הצידה */
     .leaflet-tooltip-top:before { display: none !important; }
+
+    /* עיצוב בועת ה-Popup (הלחיצה) להתאמה מלאה ל-Tooltip */
+    .leaflet-popup-content-wrapper { border-radius: 8px !important; padding: 5px !important; }
+    .leaflet-popup-content { margin: 10px !important; width: 220px !important; }
 
   </style>
 </head>
@@ -114,11 +121,12 @@ window.addEventListener('load', async () => {
         }
         contentHtml += `<div class="wpt-text">${item.content}</div></div>`;
 
-        // הגדרת הריחוף (Tooltip)
+        // הגדרת הריחוף (Tooltip) - כעת עם עיגון למרכז
         marker.bindTooltip(contentHtml, {
           direction: 'top',
-          offset: [0, -15],
-          className: 'custom-tooltip-style'
+          offset: [0, -12], // הסטה מדויקת מעל העיגול
+          className: 'custom-tooltip-style',
+          sticky: false
         });
 
         // הגדרת הלחיצה (Popup)
@@ -157,15 +165,9 @@ window.addEventListener('load', async () => {
       const coords = geom.coordinates; 
       const latlngs = coords.map(p => L.latLng(p[1], p[0]));
       const elevations = coords.map(p => p[2] || 0);
-      const distances = [];
-      let totalDist = 0;
-
-      latlngs.forEach((pt, i) => {
-        if (i === 0) distances.push("0.00");
-        else {
-          totalDist += latlngs[i-1].distanceTo(pt) / 1000;
-          distances.push(totalDist.toFixed(2));
-        }
+      const distances = coords.map((p, i) => {
+          if (i === 0) return "0.00";
+          return (latlngs.slice(0, i+1).reduce((acc, curr, idx) => idx === 0 ? 0 : acc + latlngs[idx-1].distanceTo(curr), 0) / 1000).toFixed(2);
       });
 
       const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5 }).addTo(map);
@@ -173,8 +175,9 @@ window.addEventListener('load', async () => {
       loadWaypoints(map, routeId);
       
       const hoverMarker = L.circleMarker([0, 0], { radius: 8, color: '#222', fillColor: '#fff', fillOpacity: 1 }).addTo(map);
-      hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
-      hoverMarker.bindTooltip("", { direction: 'top', offset: [0, -10] });
+      hoverMarker.setStyle({ opacity: 0 });
+      // גם כאן נשתמש ב-Tooltip ממורכז
+      hoverMarker.bindTooltip("", { direction: 'top', offset: [0, -10], className: 'custom-tooltip-style' });
 
       const chart = new Chart(document.getElementById('elevationChart'), {
         type: 'line',
@@ -188,7 +191,7 @@ window.addEventListener('load', async () => {
           onHover: (e, el) => {
             if (el.length > 0) {
               const idx = el[0].index;
-              hoverMarker.setLatLng(latlngs[idx]).setStyle({ opacity: 1, fillOpacity: 1 });
+              hoverMarker.setLatLng(latlngs[idx]).setStyle({ opacity: 1 });
               hoverMarker.setTooltipContent(`<b>${distances[idx]} ק"מ</b><br>גובה: ${elevations[idx]} מ'`).openTooltip();
             }
           },
@@ -198,7 +201,7 @@ window.addEventListener('load', async () => {
       });
 
       document.getElementById('elevationChart').addEventListener('mouseleave', () => {
-        hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 }).closeTooltip();
+        hoverMarker.setStyle({ opacity: 0 }).closeTooltip();
       });
 
       setTimeout(() => mapContainer.classList.add('loaded'), 150);
