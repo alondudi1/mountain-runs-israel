@@ -31,5 +31,15 @@
     "geometry_file": "geometry/zarzar21.json",
     "description_file": "zarzar.html",
     "is_premium": false
+  },
+  "id": "boqeq21",
+    "name": "סכינים מעל עין בוקק (21 ק״מ)",
+    "region": "מדבר יהודה",
+    "distance_km": 21,
+    "elev_gain_m": 750,
+    "difficulty": 28,
+    "geometry_file": "geometry/boqeq21.json",
+    "description_file": "zarzar.html",
+    "is_premium": false
   }
 ]
