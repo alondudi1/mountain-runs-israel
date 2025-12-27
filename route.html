@@ -14,6 +14,8 @@
   <style>
     body { margin: 0; font-family: Arial, sans-serif; background: #fafafa; color: #222; }
     .container { max-width: 1100px; margin: auto; padding: 16px; }
+    .hero { margin-bottom: 12px; position: relative; }
+    .hero h1 { margin: 0; font-size: 26px; }
     .hero { display: flex; align-items: center; gap: 15px; margin-bottom: 12px; position: relative; }
     .hero h1 { margin: 0; font-size: 26px; display: flex; align-items: center; gap: 10px; }
     .route-logo { height: 45px; width: auto; object-fit: contain; }
@@ -27,35 +29,49 @@
     .download { margin-top: 16px; padding: 12px; text-align: center; border: 1px dashed #bbb; border-radius: 10px; color: #777; cursor: pointer; transition: all 0.3s; }
     .elevation-card { margin: 16px 0 24px; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
     .elevation-title { font-weight: 700; margin-bottom: 8px; }
-    .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); z-index: 1000; }
+    .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
 
-    /* עיצוב לתמונות ותוכן בתוך בועות */
-    .wpt-popup-content { text-align: center; direction: rtl; width: 200px; }
-    .wpt-img { width: 100%; height: auto; border-radius: 8px; margin-bottom: 8px; display: block; }
-    .wpt-text { font-size: 14px; line-height: 1.4; color: #333; }
-
-    /* עיצוב אחיד וממורכז לבועות הריחוף (Tooltip) */
-    .leaflet-tooltip.custom-tooltip-style {
-        background-color: white !important;
-        border: 2px solid #FF8C00 !important;
-        border-radius: 8px !important;
-        padding: 10px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
-        width: 220px !important; 
-        white-space: normal !important;
-        opacity: 1 !important;
-        /* מחיקת שוליים שעלולים להסיט את הבועה בכיווניות RTL */
-        margin: 0 !important; 
-        pointer-events: none;
+    /* עיצוב לתמונות בתוך בועות המידע */
+    .wpt-popup-content {
+      text-align: right;
+      direction: rtl;
+      max-width: 220px;
+    }
+    .wpt-img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .wpt-text {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #333;
     }
 
-    /* ביטול החץ הקטן שמושך את הבועה הצידה */
-    .leaflet-tooltip-top:before { display: none !important; }
-
-    /* עיצוב בועת ה-Popup (הלחיצה) להתאמה מלאה ל-Tooltip */
-    .leaflet-popup-content-wrapper { border-radius: 8px !important; padding: 5px !important; }
-    .leaflet-popup-content { margin: 10px !important; width: 220px !important; }
-
+   /* עיצוב אחיד וממורכז לבועות הריחוף */
+  .leaflet-tooltip {
+      background-color: white !important;
+      border: 1px solid #FF8C00 !important; /* מסגרת כתומה תואמת */
+      border-radius: 6px !important;
+      padding: 6px 12px !important;
+      font-weight: 600;
+      font-size: 13px;
+      color: #333;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2) !important;
+      text-align: center; /* ממרכז את הטקסט בפנים */
+  }
+  
+  /* ביטול החץ הקטן שעלול להסיט את הבועה הצידה */
+  .leaflet-tooltip-top:before, 
+  .leaflet-tooltip-bottom:before, 
+  .leaflet-tooltip-left:before, 
+  .leaflet-tooltip-right:before {
+      display: none !important;
+  }
+  
+ 
   </style>
 </head>
 
@@ -68,6 +84,7 @@
       <img src="IMG_9648.jpeg" alt="Mountain Runs Israel Logo" class="route-logo">
       <span id="routeNameText">טוען מסלול…</span>
     </h1>
+  </div>
   </div>
 
   <div id="map"></div>
@@ -96,8 +113,8 @@
   </div>
 </div>
 
-<script>
-window.addEventListener('load', async () => {
+  <script>
+ window.addEventListener('load', async () => {
   const mapContainer = document.getElementById('map');
   
   async function loadJSON(path) {
@@ -106,127 +123,281 @@ window.addEventListener('load', async () => {
     return res.json();
   }
 
+  // פונקציה לטעינת נקודות העניין הכתומות
   async function loadWaypoints(map, routeId) {
+    console.log("מנסה לטעון נקודות עבור:", routeId);
     try {
       const wpts = await loadJSON(`data/wpt/${routeId}.json`);
-      wpts.forEach((item) => {
+      console.log("קובץ ה-WPT נטען בהצלחה. מספר נקודות:", wpts.length);
+
+      wpts.forEach((item, index) => {
+        console.log(`מצייר נקודה ${index}:`, item.lat, item.lng);
+        
         const marker = L.circleMarker([item.lat, item.lng], {
-          radius: 8, fillColor: "#FF8C00", color: "#FF8C00", weight: 2, fillOpacity: 0.2
+          radius: 8,
+          fillColor: "#FF8C00",
+          color: "#FF8C00",
+          weight: 2,
+          fillOpacity: 0.2
         }).addTo(map);
         
-        // יצירת תוכן מאוחד לריחוף וללחיצה
-        let contentHtml = `<div class="wpt-popup-content">`;
-        if (item.img) {
-          contentHtml += `<img src="${item.img}" class="wpt-img" onclick="openFullImage('${item.img}')" style="cursor: pointer;">`;
-        }
-        contentHtml += `<div class="wpt-text">${item.content}</div></div>`;
-
-        // הגדרת הריחוף (Tooltip) - כעת עם עיגון למרכז
-        marker.bindTooltip(contentHtml, {
-          direction: 'top',
-          offset: [0, -12], // הסטה מדויקת מעל העיגול
-          className: 'custom-tooltip-style',
-          sticky: false
+        // זה מה שמציג את הטקסט בריחוף (קיים אצלך)
+       // הגדרה שתשים את הכתובית בדיוק מעל העיגול ובאמצע שלו
+        marker.bindTooltip(item.content, {
+          direction: 'top',   // מיקום מעל הנקודה
+          offset: [0, -8],    // הסטה מדויקת למעלה (מותאם לרדיוס 8 של העיגול)
+          permanent: false,   // מופיע רק בריחוף
+          opacity: 1.0        // צבע מלא וברור
         });
 
-        // הגדרת הלחיצה (Popup)
-        marker.bindPopup(contentHtml);
+        // >>> כאן החלק החסר שיוצר את הבועה עם התמונה <<<
+        // לחיצה (Click): מציג תמונה + טקסט
+        let popupHtml = `<div class="wpt-popup-content">`;
+        if (item.img) {
+          // הוספנו onclick שקורא לפונקציית ההגדלה
+          popupHtml += `<img src="${item.img}" class="wpt-img" onclick="openFullImage('${item.img}')" title="לחץ להגדלה" style="cursor: pointer;">`;
+        }
+        popupHtml += `<div class="wpt-text">${item.content}</div></div>`;
+        
+        marker.bindPopup(popupHtml);
+        
+        // >>> סוף החלק שהוספנו <<<
       });
-    } catch (e) { console.error("שגיאה בטעינת ה-WPT:", e); }
+    } catch (e) {
+      console.error("שגיאה בטעינת ה-WPT:", e);
+    }
   }
-
   const params = new URLSearchParams(window.location.search);
   const routeId = params.get('id');
 
   try {
     const routes = await loadJSON('data/routes.json');
     const route = routes.find(r => r.id === routeId);
-    if (!route) return;
 
+    // בדיקה אם המסלול קיים במאגר
+    if (!route) {
+      document.getElementById('routeNameText').textContent = "מסלול לא נמצא";
+      return;
+    }
+
+    // עדכון הטקסט בתוך ה-span בלבד כדי לשמור על הלוגו
     document.getElementById('routeNameText').textContent = route.name;
     document.getElementById('infoRegion').textContent = `📍 אזור: ${route.region || '—'}`;
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
     document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance_km || '--'} ק"מ`;
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elev_gain_m || '--'} מ'`;
-
+   // 5. טעינת תיאור המסלול (קובץ חיצוני או טקסט מה-JSON)
     const descContainer = document.getElementById('routeDescription');
     if (route.description_file) {
-      const descRes = await fetch(`data/descriptions/${route.description_file}`);
-      if (descRes.ok) descContainer.innerHTML = await descRes.text();
+      try {
+        const descRes = await fetch(`data/descriptions/${route.description_file}`);
+        if (descRes.ok) {
+          const descHtml = await descRes.text();
+          descContainer.innerHTML = descHtml;
+        } else {
+          descContainer.innerHTML = `<p style="color:red;">שגיאה: קובץ התיאור "${route.description_file}" לא נמצא בתיקיית data/descriptions.</p>`;
+        }
+      } catch (e) {
+        console.error("שגיאה בטעינת התיאור:", e);
+        descContainer.textContent = "שגיאה בטעינת התיאור מהשרת.";
+      }
     } else {
-      descContainer.innerHTML = route.description || "אין תיאור זמין.";
+      // אם לא הוגדר קובץ חיצוני, נשתמש בטקסט הרגיל מה-JSON (תומך ב-HTML)
+      descContainer.innerHTML = route.description || "אין תיאור זמין למסלול זה.";
     }
 
-    const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', { maxZoom: 16 });
-    const map = L.map('map', { layers: [ihm] });
+    // 2. אתחול המפה עם תפריט שכבות (זהה לחלוטין לקובץ האינדקס)
+    const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
+      maxZoom: 16, attribution: '© Israel Hiking Map'
+    });
+    
+    const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      maxZoom: 17, attribution: '© OpenTopoMap'
+    });
+
+    const satellite = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      { maxZoom: 19, attribution: 'Tiles © Esri' }
+    );
+    
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '© OpenStreetMap'
+    });
+
+    // יצירת המפה עם הגדרת IHM כברירת מחדל
+    const map = L.map('map', { 
+      layers: [ihm] 
+    });
+
+    // הוספת תפריט בחירת המפות עם השמות המדויקים מהאינדקס
+    L.control.layers(
+      { 
+        'סימון שבילים (IHM)': ihm, 
+        'טופוגרפי': topo, 
+        'לוויין': satellite, 
+        'מפת רחובות (OSM)': osm 
+      },
+      null,
+      { position: 'topright' }
+    ).addTo(map);
 
     const geom = await loadJSON(`data/${route.geometry_file}`);
+
+    
+    
     if (geom && geom.coordinates) {
       const coords = geom.coordinates; 
-      const latlngs = coords.map(p => L.latLng(p[1], p[0]));
-      const elevations = coords.map(p => p[2] || 0);
-      const distances = coords.map((p, i) => {
-          if (i === 0) return "0.00";
-          return (latlngs.slice(0, i+1).reduce((acc, curr, idx) => idx === 0 ? 0 : acc + latlngs[idx-1].distanceTo(curr), 0) / 1000).toFixed(2);
-      });
+      const latlngs = [];
+      const distances = [];
+      const elevations = [];
+      const slopes = [];
+      let totalDist = 0;
 
-      const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5 }).addTo(map);
-      map.fitBounds(polyline.getBounds(), { padding: [40, 40] });
-      loadWaypoints(map, routeId);
-      
-      const hoverMarker = L.circleMarker([0, 0], { radius: 8, color: '#222', fillColor: '#fff', fillOpacity: 1 }).addTo(map);
-      hoverMarker.setStyle({ opacity: 0 });
-      // גם כאן נשתמש ב-Tooltip ממורכז
-      hoverMarker.bindTooltip("", { direction: 'top', offset: [0, -10], className: 'custom-tooltip-style' });
+      // שלב 1: איסוף נקודות, גבהים ומרחקים מצטברים
+      coords.forEach((point, i) => {
+        const [lon, lat, ele] = point;
+        const currentPt = L.latLng(lat, lon);
+        latlngs.push(currentPt);
+        elevations.push(ele || 0);
 
-      const chart = new Chart(document.getElementById('elevationChart'), {
-        type: 'line',
-        data: {
-          labels: distances,
-          datasets: [{ data: elevations, borderColor: '#d32f2f', fill: true, pointRadius: 0 }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          onHover: (e, el) => {
-            if (el.length > 0) {
-              const idx = el[0].index;
-              hoverMarker.setLatLng(latlngs[idx]).setStyle({ opacity: 1 });
-              hoverMarker.setTooltipContent(`<b>${distances[idx]} ק"מ</b><br>גובה: ${elevations[idx]} מ'`).openTooltip();
-            }
-          },
-          plugins: { legend: { display: false } },
-          scales: { y: { title: { display: true, text: 'גובה (מטר)' } } }
+        if (i === 0) {
+          distances.push("0.00");
+        } else {
+          const prevPt = latlngs[i-1];
+          totalDist += prevPt.distanceTo(currentPt) / 1000;
+          distances.push(totalDist.toFixed(2));
         }
       });
 
-      document.getElementById('elevationChart').addEventListener('mouseleave', () => {
-        hoverMarker.setStyle({ opacity: 0 }).closeTooltip();
+      // שלב 2: חישוב שיפוע ממוצע (חלון נע של 5 נקודות לכל צד)
+      const windowSize = 5; 
+      for (let i = 0; i < coords.length; i++) {
+        // מגדירים את גבולות החלון לחישוב
+        let start = Math.max(0, i - windowSize);
+        let end = Math.min(coords.length - 1, i + windowSize);
+        
+        let distMeters = latlngs[start].distanceTo(latlngs[end]);
+        let eleDiff = elevations[end] - elevations[start];
+        
+        // חישוב השיפוע על פני הטווח הממוצע
+        let s = distMeters > 5 ? (eleDiff / distMeters) * 100 : 0;
+        slopes.push(s.toFixed(1));
+      }
+
+      const polyline = L.polyline(latlngs, { color: '#d32f2f', weight: 5, opacity: 0.9 }).addTo(map);
+      map.fitBounds(polyline.getBounds(), { padding: [40, 40], animate: false });
+
+      loadWaypoints(map, routeId);
+      
+      const hoverMarker = L.circleMarker([0, 0], {
+        radius: 8, color: '#222', weight: 3, fillColor: '#fff', fillOpacity: 1
+      }).addTo(map);
+      hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
+      hoverMarker.bindTooltip("", { sticky: false, direction: 'top', offset: [0, -10] });
+
+      const canvas = document.getElementById('elevationChart');
+      const ctx = canvas.getContext('2d');
+      
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: distances,
+          datasets: [{
+            data: elevations,
+            borderColor: '#d32f2f',
+            backgroundColor: 'rgba(211, 47, 47, 0.1)',
+            fill: true,
+            pointRadius: 0,
+            borderWidth: 2,
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: { 
+            legend: { display: false },
+            tooltip: { 
+              enabled: true,
+              displayColors: false, // מסיר את הריבוע האדום
+              callbacks: {
+                title: (items) => `מרחק: ${items[0].label} ק"מ`,
+                label: (ctx) => {
+                  const idx = ctx.dataIndex;
+                  return [
+                    `גובה: ${ctx.raw} מטר`,
+                    `שיפוע ממוצע: ${slopes[idx]}%`
+                  ];
+                }
+              }
+            }
+          },
+          onHover: (event, activeElements) => {
+            if (activeElements.length > 0) {
+              const idx = activeElements[0].index;
+              const latlng = latlngs[idx];
+              if (latlng) {
+                hoverMarker.setLatLng(latlng);
+                hoverMarker.setStyle({ opacity: 1, fillOpacity: 1 });
+                hoverMarker.setTooltipContent(`
+                  <b>${distances[idx]} ק"מ</b><br>
+                  גובה: ${elevations[idx]} מ'<br>
+                  שיפוע: ${slopes[idx]}%
+                `).openTooltip();
+              }
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: 'מרחק (ק"מ)' }, ticks: { maxTicksLimit: 10 } },
+            y: { title: { display: true, text: 'גובה (מטר)' } }
+          }
+        }
+      });
+
+      // העלמת המרקר כשהעכבר יוצא משטח הגרף
+      canvas.addEventListener('mouseleave', () => {
+        hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
+        hoverMarker.closeTooltip();
       });
 
       setTimeout(() => mapContainer.classList.add('loaded'), 150);
       L.polylineDecorator(polyline, {
-        patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff' } }) }]
+        patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff', weight: 2 } }) }]
       }).addTo(map);
     }
 
+    // הגדרת כפתור ההורדה לפי המוסכמה: data/gpx/[ID].gpx
     document.getElementById('downloadBtn').onclick = () => {
-      const link = document.createElement('a');
-      link.href = `data/gpx/${routeId}.gpx`;
-      link.download = `${routeId}.gpx`;
-      link.click();
-    };
-  } catch (err) { console.error(err); }
+  const gpxFilename = `${routeId}.gpx`;
+  const gpxPath = `data/gpx/${gpxFilename}`;
+  
+  console.log("מנסה להוריד קובץ מהנתיב:", gpxPath); // שורה לבדיקה
+
+  const link = document.createElement('a');
+  link.href = gpxPath;
+  link.download = gpxFilename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+  } catch (err) {
+    console.error("שגיאה:", err);
+    mapContainer.classList.add('loaded');
+  }
 });
 
 function openFullImage(src) {
-  document.getElementById('fullImage').src = src;
-  document.getElementById('imageModal').style.display = 'flex';
+  const modal = document.getElementById('imageModal');
+  const fullImg = document.getElementById('fullImage');
+  fullImg.src = src;
+  modal.style.display = 'flex'; // מציג את החלון
 }
+    
 </script>
 
 <div id="imageModal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; cursor: pointer;" onclick="this.style.display='none'">
-  <span style="position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px;">&times;</span>
+  <span style="position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; font-weight: bold;">&times;</span>
   <img id="fullImage" style="max-width: 90%; max-height: 90%; border: 2px solid #fff; border-radius: 8px;">
 </div>
   
