@@ -22,4 +22,15 @@
     "description_file": "bokek21.html",
     "is_premium": false
   }
+  {
+    "id": "har_rechev",
+    "name": "מורדות הר רכב (20 ק״מ)",
+    "region": "מגב",
+    "distance_km": 20,
+    "elev_gain_m": 600,
+    "difficulty": 26,
+    "geometry_file": "geometry/har_rechev.json",
+    "description_file": "har_rechev.html",
+    "is_premium": false
+  },
 ]
