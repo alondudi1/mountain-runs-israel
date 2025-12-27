@@ -25,7 +25,7 @@
   {
     "id": "har_rechev",
     "name": "מורדות הר רכב (20 ק״מ)",
-    "region": "מגב",
+    "region": "נגב",
     "distance_km": 20,
     "elev_gain_m": 600,
     "difficulty": 26,
