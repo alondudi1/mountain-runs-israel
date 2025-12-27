@@ -21,7 +21,7 @@
     "geometry_file": "geometry/bokek21.json",
     "description_file": "bokek21.html",
     "is_premium": false
-  }
+  },
   {
     "id": "har_rechev",
     "name": "מורדות הר רכב (20 ק״מ)",
@@ -32,5 +32,5 @@
     "geometry_file": "geometry/har_rechev.json",
     "description_file": "har_rechev.html",
     "is_premium": false
-  },
+  }
 ]
