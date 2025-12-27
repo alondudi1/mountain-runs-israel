@@ -384,6 +384,13 @@
     document.getElementById('downloadBtn').onclick = () => {
   const gpxFilename = `${routeId}.gpx`;
   const gpxPath = `data/gpx/${gpxFilename}`;
+
+  // הוספת אירוע מעקב לגוגל אנליטיקס
+  gtag('event', 'file_download', {
+    'file_name': gpxFilename,
+    'file_extension': 'gpx',
+    'route_id': routeId
+  });
   
   console.log("מנסה להוריד קובץ מהנתיב:", gpxPath); // שורה לבדיקה
 
