@@ -153,6 +153,15 @@
         popupHtml += `<div class="wpt-text">${item.content}</div></div>`;
         
         marker.bindPopup(popupHtml);
+
+        // פתיחת הבועה במעבר עכבר
+        marker.on('mouseover', function() { this.openPopup(); });
+        // סגירת הבועה ביציאת עכבר - רק אם היא לא "נעולה" על ידי לחיצה
+        marker.on('mouseout', function() { if (!this._pinned) { this.closePopup(); } });
+        // נעילת הבועה בעת לחיצה
+        marker.on('click', function() { this._pinned = true; });
+        // שחרור הנעילה כאשר הבועה נסגרת (בלחיצה על ה-X או במקום אחר במפה)
+        marker.on('popupclose', function() { this._pinned = false; });
         
         // >>> סוף החלק שהוספנו <<<
       });
