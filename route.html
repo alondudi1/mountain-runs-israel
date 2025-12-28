@@ -452,12 +452,7 @@ L.control.scale({
   link.click();
   document.body.removeChild(link);
 };
-  } catch (err) {
-    console.error("שגיאה:", err);
-    mapContainer.classList.add('loaded');
-  }
-
-
+  
 function openFullImage(src) {
   const modal = document.getElementById('imageModal');
   const fullImg = document.getElementById('fullImage');
@@ -515,7 +510,17 @@ const LocateControl = L.Control.extend({
         return container;
     }
 });
-map.addControl(new LocateControl());
+  map.addControl(new LocateControl());
+
+  // --- סיום קוד ה-GPS והמירכוז ---
+    map.addControl(new LocateControl());
+
+  } catch (err) {
+    console.error("שגיאה במהלך טעינת המפה או הנתונים:", err);
+    mapContainer.classList.add('loaded');
+  }
+}); // סגירת ה-load listener המקורית
+</script>
 });    
 </script>
 
