@@ -87,6 +87,43 @@
       margin-left: 10px !important;
       margin-bottom: 10px !important;
   }
+
+/* עיצוב המשולש (החץ) של המשתמש */
+    .user-location-triangle {
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 20px solid #007bff; /* כחול בולט */
+      filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
+      transition: transform 0.2s ease;
+    }
+
+    /* כפתור מירכוז המפה - זהה בגודלו לכפתור המפות */
+    .leaflet-control-locate {
+      background: white !important;
+      width: 34px !important;
+      height: 34px !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.4) !important;
+      border-radius: 4px !important;
+      border: none !important;
+      text-decoration: none;
+    }
+
+    /* סידור הכפתורים בפינה הימנית העליונה */
+    .leaflet-top.leaflet-right {
+      display: flex !important;
+      flex-direction: row-reverse !important;
+      gap: 12px !important;
+      margin-right: 12px !important;
+      margin-top: 12px !important;
+    }
+    .leaflet-top.leaflet-right .leaflet-control { margin: 0 !important; }
     
   </style>
 </head>
@@ -425,6 +462,58 @@ function openFullImage(src) {
   fullImg.src = src;
   modal.style.display = 'flex'; // מציג את החלון
 }
+
+// 1. טעינת קובץ המנוע (יש לוודא שהקובץ הוסף ב-head)
+// <script src="gps-manager.js"></script>
+
+let userMarker = null;
+
+// יצירת האייקון של המשולש
+const triangleIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: '<div id="userTriangle" class="user-location-triangle"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+});
+
+// פונקציה שמתעדכנת מה-GPSManager
+GPSManager.onUpdate(({ latlng, heading }) => {
+    if (!latlng) return;
+
+    // יצירה או עדכון מיקום המשולש
+    if (!userMarker) {
+        userMarker = L.marker(latlng, { icon: triangleIcon }).addTo(map);
+    } else {
+        userMarker.setLatLng(latlng);
+    }
+
+    // עדכון סיבוב המשולש לפי המצפן
+    const triangleEl = document.getElementById('userTriangle');
+    if (triangleEl && heading !== null) {
+        triangleEl.style.transform = `rotate(${heading}deg)`;
+    }
+});
+
+// הוספת כפתור המירכוז למפה (מתחת לעזרה)
+const LocateControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function() {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        const button = L.DomUtil.create('a', 'leaflet-control-locate', container);
+        button.innerHTML = '🎯';
+        button.title = 'מרכז אותי';
+
+        button.onclick = function(e) {
+            e.preventDefault();
+            GPSManager.requestPermissions(); // בקשת הרשאה בלחיצה הראשונה
+            if (GPSManager.currentLocation) {
+                map.flyTo(GPSManager.currentLocation, 16); // "טיסה" למיקום
+            }
+        };
+        return container;
+    }
+});
+map.addControl(new LocateControl());
     
 </script>
 
