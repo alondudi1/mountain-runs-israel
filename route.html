@@ -125,6 +125,25 @@
       margin-top: 12px !important;
     }
     .leaflet-top.leaflet-right .leaflet-control { margin: 0 !important; }
+
+    /* תיקון לגלישת טקסט ולינקים ארוכים בתיאור המסלול */
+    #routeDescription {
+      overflow-wrap: break-word; /* שובר מילים ארוכות */
+      word-wrap: break-word;     /* תמיכה בדפדפנים ישנים */
+      word-break: break-word;    /* מוודא שבירה גם במקרים קיצוניים */
+      line-height: 1.6;          /* ריווח שורות נוח לקריאה */
+    }
+
+    /* וידוא שתמונות בתוך התיאור לא חורגות מהרוחב */
+    #routeDescription img {
+      max-width: 100% !important;
+      height: auto !important;
+    }
+
+    /* שבירה אגרסיבית ללינקים ארוכים (כמו Waze) */
+    #routeDescription a {
+      word-break: break-all;
+    }
     
   </style>
 </head>
