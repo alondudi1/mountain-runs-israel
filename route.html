@@ -139,7 +139,7 @@
       <span id="routeNameText">טוען מסלול…</span>
     </h1>
   </div>
-
+  </div>
 
   <div id="map"></div>
 
@@ -195,29 +195,19 @@
           fillOpacity: 0.2
         }).addTo(map);
         
-        
-
-        // >>> כאן החלק החסר שיוצר את הבועה עם התמונה <<<
-        // לחיצה (Click): מציג תמונה + טקסט
+        // יצירת תוכן הבועה
         let popupHtml = `<div class="wpt-popup-content">`;
         if (item.img) {
-          // הוספנו onclick שקורא לפונקציית ההגדלה
           popupHtml += `<img src="${item.img}" class="wpt-img" onclick="openFullImage('${item.img}')" title="לחץ להגדלה" style="cursor: pointer;">`;
         }
         popupHtml += `<div class="wpt-text">${item.content}</div></div>`;
         
         marker.bindPopup(popupHtml);
 
-        // פתיחת הבועה במעבר עכבר
         marker.on('mouseover', function() { this.openPopup(); });
-        // סגירת הבועה ביציאת עכבר - רק אם היא לא "נעולה" על ידי לחיצה
         marker.on('mouseout', function() { if (!this._pinned) { this.closePopup(); } });
-        // נעילת הבועה בעת לחיצה
         marker.on('click', function() { this._pinned = true; });
-        // שחרור הנעילה כאשר הבועה נסגרת (בלחיצה על ה-X או במקום אחר במפה)
         marker.on('popupclose', function() { this._pinned = false; });
-        
-        // >>> סוף החלק שהוספנו <<<
       });
     } catch (e) {
       console.error("שגיאה בטעינת ה-WPT:", e);
@@ -243,7 +233,8 @@
     document.getElementById('infoDifficulty').textContent = `🔥 קושי: ${route.difficulty || '—'}`;
     document.getElementById('infoDistance').textContent = `📏 מרחק: ${route.distance_km || '--'} ק"מ`;
     document.getElementById('infoAscent').textContent = `⛰️ טיפוס: ${route.elev_gain_m || '--'} מ'`;
-   // 5. טעינת תיאור המסלול (קובץ חיצוני או טקסט מה-JSON)
+   
+    // טעינת תיאור המסלול
     const descContainer = document.getElementById('routeDescription');
     if (route.description_file) {
       try {
@@ -259,11 +250,10 @@
         descContainer.textContent = "שגיאה בטעינת התיאור מהשרת.";
       }
     } else {
-      // אם לא הוגדר קובץ חיצוני, נשתמש בטקסט הרגיל מה-JSON (תומך ב-HTML)
       descContainer.innerHTML = route.description || "אין תיאור זמין למסלול זה.";
     }
 
-    // 2. אתחול המפה עם תפריט שכבות (זהה לחלוטין לקובץ האינדקס)
+    // אתחול המפה עם תפריט שכבות
     const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
       maxZoom: 16, attribution: '© Israel Hiking Map'
     });
@@ -281,19 +271,19 @@
       maxZoom: 19, attribution: '© OpenStreetMap'
     });
 
-    // יצירת המפה עם הגדרת IHM כברירת מחדל
+    // יצירת המפה
     map = L.map('map', { 
       layers: [ihm] 
     });
 
-    // הוספת קנה מידה למפה
-L.control.scale({
-    metric: true,       // הצגת יחידות במטרים/קילומטרים
-    imperial: false,     // ביטול הצגת יחידות במיילים (פחות רלוונטי לישראל)
-    position: 'bottomleft' // מיקום בפינה השמאלית התחתונה
-}).addTo(map);
+    // הוספת קנה מידה
+    L.control.scale({
+        metric: true,
+        imperial: false,
+        position: 'bottomleft'
+    }).addTo(map);
 
-    // הוספת תפריט בחירת המפות עם השמות המדויקים מהאינדקס
+    // הוספת תפריט שכבות
     L.control.layers(
       { 
         'סימון שבילים (IHM)': ihm, 
@@ -307,8 +297,6 @@ L.control.scale({
 
     const geom = await loadJSON(`data/${route.geometry_file}`);
 
-    
-    
     if (geom && geom.coordinates) {
       const coords = geom.coordinates; 
       const latlngs = [];
@@ -317,7 +305,7 @@ L.control.scale({
       const slopes = [];
       let totalDist = 0;
 
-      // שלב 1: איסוף נקודות, גבהים ומרחקים מצטברים
+      // איסוף נקודות וחישובים
       coords.forEach((point, i) => {
         const [lon, lat, ele] = point;
         const currentPt = L.latLng(lat, lon);
@@ -333,17 +321,13 @@ L.control.scale({
         }
       });
 
-      // שלב 2: חישוב שיפוע ממוצע (חלון נע של 5 נקודות לכל צד)
+      // חישוב שיפוע
       const windowSize = 5; 
       for (let i = 0; i < coords.length; i++) {
-        // מגדירים את גבולות החלון לחישוב
         let start = Math.max(0, i - windowSize);
         let end = Math.min(coords.length - 1, i + windowSize);
-        
         let distMeters = latlngs[start].distanceTo(latlngs[end]);
         let eleDiff = elevations[end] - elevations[start];
-        
-        // חישוב השיפוע על פני הטווח הממוצע
         let s = distMeters > 5 ? (eleDiff / distMeters) * 100 : 0;
         slopes.push(s.toFixed(1));
       }
@@ -384,7 +368,7 @@ L.control.scale({
             legend: { display: false },
             tooltip: { 
               enabled: true,
-              displayColors: false, // מסיר את הריבוע האדום
+              displayColors: false,
               callbacks: {
                 title: (items) => `מרחק: ${items[0].label} ק"מ`,
                 label: (ctx) => {
@@ -419,7 +403,6 @@ L.control.scale({
         }
       });
 
-      // העלמת המרקר כשהעכבר יוצא משטח הגרף
       canvas.addEventListener('mouseleave', () => {
         hoverMarker.setStyle({ opacity: 0, fillOpacity: 0 });
         hoverMarker.closeTooltip();
@@ -431,102 +414,90 @@ L.control.scale({
       }).addTo(map);
     }
 
-    // הגדרת כפתור ההורדה לפי המוסכמה: data/gpx/[ID].gpx
+    // הגדרת כפתור ההורדה
     document.getElementById('downloadBtn').onclick = () => {
-  const gpxFilename = `${routeId}.gpx`;
-  const gpxPath = `data/gpx/${gpxFilename}`;
+      const gpxFilename = `${routeId}.gpx`;
+      const gpxPath = `data/gpx/${gpxFilename}`;
 
-  // הוספת אירוע מעקב לגוגל אנליטיקס
-  gtag('event', 'file_download', {
-    'file_name': gpxFilename,
-    'file_extension': 'gpx',
-    'route_id': routeId
-  });
-  
-  console.log("מנסה להוריד קובץ מהנתיב:", gpxPath); // שורה לבדיקה
+      gtag('event', 'file_download', {
+        'file_name': gpxFilename,
+        'file_extension': 'gpx',
+        'route_id': routeId
+      });
+      
+      const link = document.createElement('a');
+      link.href = gpxPath;
+      link.download = gpxFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
 
-  const link = document.createElement('a');
-  link.href = gpxPath;
-  link.download = gpxFilename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-  
-window.openFullImage = function(src) {
-  const modal = document.getElementById('imageModal');
-  const fullImg = document.getElementById('fullImage');
-  fullImg.src = src;
-  modal.style.display = 'flex'; // מציג את החלון
-}
+    // --- תיקון: הגדרת פונקציית התמונות כגלובלית בתוך הסקריפט ---
+    window.openFullImage = function(src) {
+      const modal = document.getElementById('imageModal');
+      const fullImg = document.getElementById('fullImage');
+      fullImg.src = src;
+      modal.style.display = 'flex';
+    }
 
-// 1. טעינת קובץ המנוע (יש לוודא שהקובץ הוסף ב-head)
-// <script src="gps-manager.js"></script>
+    // --- ניהול מיקום משתמש (GPS) ---
+    let userMarker = null;
 
-// --- ניהול מיקום משתמש (GPS) ---
-  let userMarker = null;
+    const triangleIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: '<div id="userTriangle" class="user-location-triangle"></div>',
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+    });
 
-  const triangleIcon = L.divIcon({
-      className: 'custom-div-icon',
-      html: '<div id="userTriangle" class="user-location-triangle"></div>',
-      iconSize: [20, 20],
-      iconAnchor: [10, 10]
-  });
+    GPSManager.onUpdate(({ latlng, heading }) => {
+        if (!latlng || !map) return;
 
-  // האזנה לעדכונים מהמנוע החיצוני
-  GPSManager.onUpdate(({ latlng, heading }) => {
-      if (!latlng || !map) return;
+        if (!userMarker) {
+            userMarker = L.marker(latlng, { icon: triangleIcon }).addTo(map);
+        } else {
+            userMarker.setLatLng(latlng);
+        }
 
-      if (!userMarker) {
-          userMarker = L.marker(latlng, { icon: triangleIcon }).addTo(map);
-      } else {
-          userMarker.setLatLng(latlng);
-      }
+        const triangleEl = document.getElementById('userTriangle');
+        if (triangleEl && heading !== null) {
+            triangleEl.style.transform = `rotate(${heading}deg)`;
+        }
+    });
 
-      const triangleEl = document.getElementById('userTriangle');
-      if (triangleEl && heading !== null) {
-          triangleEl.style.transform = `rotate(${heading}deg)`;
-      }
-  });
+    const LocateControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function() {
+            const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+            const button = L.DomUtil.create('a', 'leaflet-control-locate', container);
+            button.innerHTML = '🎯';
+            button.href = '#';
+            button.title = 'מרכז אותי';
 
-  // יצירת פקד המירכוז (🎯)
-  const LocateControl = L.Control.extend({
-      options: { position: 'topright' },
-      onAdd: function() {
-          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-          const button = L.DomUtil.create('a', 'leaflet-control-locate', container);
-          button.innerHTML = '🎯';
-          button.href = '#';
-          button.title = 'מרכז אותי';
+            button.onclick = function(e) {
+                e.preventDefault();
+                GPSManager.requestPermissions(); 
+                if (GPSManager.currentLocation) {
+                    map.flyTo(GPSManager.currentLocation, 16);
+                } else {
+                    alert("מתחבר ל-GPS... וודא שאתה תחת שמיים פתוחים");
+                }
+            };
+            return container;
+        }
+    });
 
-          button.onclick = function(e) {
-              e.preventDefault();
-              GPSManager.requestPermissions(); 
-              if (GPSManager.currentLocation) {
-                  map.flyTo(GPSManager.currentLocation, 16);
-              } else {
-                  alert("מתחבר ל-GPS... וודא שאתה תחת שמיים פתוחים");
-              }
-          };
-          return container;
-      }
-  });
-
-  // הוספת הכפתור למפה פעם אחת בלבד
-  if (map) {
-  // הוספת הכפתור למפה
-  map.addControl(new LocateControl());
-
-  // הצגת המפה (שינוי השקיפות ל-1)
-  setTimeout(() => mapContainer.classList.add('loaded'), 150);
-  }
+    if (map) {
+      map.addControl(new LocateControl());
+      setTimeout(() => mapContainer.classList.add('loaded'), 150);
+    }
 
   } catch (err) {
     console.error("שגיאה בטעינה:", err);
-    // הצגת המפה גם אם יש שגיאה בנתונים
     mapContainer.classList.add('loaded');
   }
-}); // סגירת ה-load listener
+}); 
 </script>
 
 <div id="imageModal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; cursor: pointer;" onclick="this.style.display='none'">
