@@ -148,16 +148,26 @@
       margin-top: 10px;
     }
 
+    /* --- התאמות לנייד --- */
     @media (max-width: 800px) {
       #app { flex-direction: column; }
-      #sidebar { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #ddd; }
+      
+      #sidebar { 
+        width: 100%; 
+        height: 40vh; 
+        border-left: none; 
+        border-top: 1px solid #ddd;
+        
+        /* התיקון החדש: מוסיף שטח ריק בסוף הגלילה כדי שהכרטיס הצף לא יסתיר כלום */
+        padding-bottom: 150px !important; 
+      }
       #map { height: 60vh; }
-
-      /* הקטנת הלוגו בנייד כדי לפנות מקום למסלולים */
+      
+      /* הקטנת הלוגו בנייד */
       .sidebar-logo {
-        width: auto;        /* מבטל את המתיחה לרוחב מלא */
-        max-height: 80px;   /* מגביל את הגובה (אפשר לשחק עם המספר הזה) */
-        margin: 0 auto 10px auto; /* ממרכז את הלוגו */
+        width: auto;
+        max-height: 80px; 
+        margin: 0 auto 10px auto; 
       }
     }
     .leaflet-top.leaflet-left .leaflet-control {
