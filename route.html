@@ -144,6 +144,23 @@
     #routeDescription a {
       word-break: break-all;
     }
+
+    /* התאמה לנייד: הרחבת גרף הגבהים למקסימום */
+    @media (max-width: 600px) {
+      .elevation-card {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      /* שמירה על רווח קטן לכותרת כדי שלא תידבק לקצה */
+      .elevation-title {
+        padding-right: 10px;
+      }
+      /* הקטנת שוליים של כל העמוד בנייד כדי לתת יותר מקום */
+      .container {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+    }
     
   </style>
 </head>
