@@ -21,34 +21,40 @@
   
   <style>
 
-    /* עיצוב כפתור העזרה - התאמה מדויקת לכפתורי Leaflet */
+    /* עיצוב כפתור עזרה זהה לכפתור השכבות */
     .leaflet-control-help {
-      background-color: #fff;
-      width: 34px !important;
-      height: 34px !important;
-      line-height: 34px !important;
-      text-align: center;
-      cursor: pointer;
-      display: flex;
+      background-color: #fff !important;
+      width: 34px !important;  /* גודל כפתור תקני ב-Leaflet */
+      height: 34px !important; /* גודל כפתור תקני ב-Leaflet */
+      display: flex !important;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      border-radius: 4px !important; /* פינות מעוגלות זהות */
+      box-shadow: 0 1px 5px rgba(0,0,0,0.4) !important;
       text-decoration: none;
       font-size: 18px;
       color: #333;
-      border: none;
+      border: none !important;
     }
 
-    .leaflet-control-help:hover { background-color: #f4f4f4; }
+    .leaflet-control-help:hover { background-color: #f4f4f4 !important; }
 
-    /* סידור הפינה הימנית - העזרה משמאל לשכבות */
+    /* סידור אופקי של הכפתורים בפינה הימנית */
     .leaflet-top.leaflet-right {
-      display: flex;
-      flex-direction: row-reverse;
-      gap: 10px;
-      margin-right: 10px;
-      margin-top: 10px;
+      display: flex !important;
+      flex-direction: row-reverse !important;
+      gap: 12px !important; /* רווח נקי בין הכפתורים */
+      margin-right: 12px !important;
+      margin-top: 12px !important;
     }
-    .leaflet-top.leaflet-right .leaflet-control { margin: 0 !important; border: none !important; }
+
+    /* מניעת שוליים כפולים שמפריעים ליישור */
+    .leaflet-top.leaflet-right .leaflet-control { 
+      margin: 0 !important; 
+      border: none !important;
+      box-shadow: none !important; /* ביטול צל כפול */
+    }
 
     /* עיצוב חלון העזרה (Modal) */
     .modal-index {
@@ -322,20 +328,21 @@
   const HelpControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function () {
-      // יצירת המעטפת (container) עם מסגרת Leaflet תקנית
-      const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-      const button = L.DomUtil.create('a', 'leaflet-control-help', container);
+      // יצירת הכפתור ישירות כפקד (ללא container עוטף שמייצר מסגרת כפולה)
+      const button = L.DomUtil.create('a', 'leaflet-control leaflet-control-help');
       
       button.innerHTML = '❓';
       button.href = '#';
       button.title = 'עזרה';
       
+      // מניעת לחיצה על המפה שמתחת לכפתור
       L.DomEvent.disableClickPropagation(button);
+      
       button.onclick = (e) => { 
         e.preventDefault(); 
         window.openNavHelp(); 
       };
-      return container;
+      return button;
     }
   });
   map.addControl(new HelpControl());
