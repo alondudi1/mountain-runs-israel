@@ -82,7 +82,12 @@
       display: none !important;
   }
   
- 
+    /* מבטיח שקנה המידה יהיה קריא ולא צמוד מדי לפינה */
+  .leaflet-control-scale {
+      margin-left: 10px !important;
+      margin-bottom: 10px !important;
+  }
+    
   </style>
 </head>
 
@@ -241,6 +246,13 @@
     const map = L.map('map', { 
       layers: [ihm] 
     });
+
+    // הוספת קנה מידה למפה
+L.control.scale({
+    metric: true,       // הצגת יחידות במטרים/קילומטרים
+    imperial: false,     // ביטול הצגת יחידות במיילים (פחות רלוונטי לישראל)
+    position: 'bottomleft' // מיקום בפינה השמאלית התחתונה
+}).addTo(map);
 
     // הוספת תפריט בחירת המפות עם השמות המדויקים מהאינדקס
     L.control.layers(
