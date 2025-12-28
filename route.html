@@ -145,20 +145,32 @@
       word-break: break-all;
     }
 
-    /* התאמה לנייד: הרחבת גרף הגבהים למקסימום */
-    @media (max-width: 600px) {
+    /* --- תיקונים לנייד ורוחב מלא לגרף --- */
+    
+    /* וידוא שהקנבס והעוטף שלו תופסים רוחב מלא תמיד */
+    #elevation > div {
+        width: 100% !important;
+    }
+    #elevationChart {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+    }
+
+    /* התאמה לנייד (כולל מצב אופקי): ביטול שוליים בכרטיס הגרף */
+    /* שינינו מ-600px ל-950px כדי שיתפוס גם אייפון מסובב */
+    @media (max-width: 950px) {
       .elevation-card {
         padding-left: 0 !important;
         padding-right: 0 !important;
       }
-      /* שמירה על רווח קטן לכותרת כדי שלא תידבק לקצה */
       .elevation-title {
         padding-right: 10px;
       }
-      /* הקטנת שוליים של כל העמוד בנייד כדי לתת יותר מקום */
+      /* צמצום שוליים כלליים של הדף בנייד */
       .container {
-        padding-left: 8px;
-        padding-right: 8px;
+        padding-left: 4px; 
+        padding-right: 4px;
       }
     }
     
