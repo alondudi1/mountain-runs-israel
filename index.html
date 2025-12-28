@@ -21,26 +21,26 @@
   
   <style>
 
-    /* עיצוב כפתור העזרה בתוך המפה */
+    /* עיצוב כפתור העזרה - התאמה מדויקת לכפתורי Leaflet */
     .leaflet-control-help {
       background-color: #fff;
-      width: 30px;
-      height: 30px;
-      line-height: 30px;
+      width: 34px !important;
+      height: 34px !important;
+      line-height: 34px !important;
       text-align: center;
       cursor: pointer;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-      border-radius: 4px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #333;
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-decoration: none;
+      font-size: 18px;
+      color: #333;
+      border: none;
     }
 
-    .leaflet-control-help:hover { background-color: #f4f4f4; color: #d32f2f; }
+    .leaflet-control-help:hover { background-color: #f4f4f4; }
 
-    /* סידור הכפתורים בפינה הימנית - העזרה משמאל לשכבות */
+    /* סידור הפינה הימנית - העזרה משמאל לשכבות */
     .leaflet-top.leaflet-right {
       display: flex;
       flex-direction: row-reverse;
@@ -48,7 +48,7 @@
       margin-right: 10px;
       margin-top: 10px;
     }
-    .leaflet-top.leaflet-right .leaflet-control { margin: 0 !important; }
+    .leaflet-top.leaflet-right .leaflet-control { margin: 0 !important; border: none !important; }
 
     /* עיצוב חלון העזרה (Modal) */
     .modal-index {
@@ -74,7 +74,7 @@
       width: 100%; background: #d32f2f; color: white; border: none; 
       padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px;
     }
-
+    
     html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
     #app { display: flex; height: 100vh; flex-direction: row-reverse; }
     #map { flex: 1; }
@@ -322,12 +322,19 @@
   const HelpControl = L.Control.extend({
     options: { position: 'topright' },
     onAdd: function () {
+      // יצירת המעטפת (container) עם מסגרת Leaflet תקנית
       const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
       const button = L.DomUtil.create('a', 'leaflet-control-help', container);
+      
       button.innerHTML = '❓';
+      button.href = '#';
       button.title = 'עזרה';
+      
       L.DomEvent.disableClickPropagation(button);
-      button.onclick = (e) => { e.preventDefault(); openNavHelp(); };
+      button.onclick = (e) => { 
+        e.preventDefault(); 
+        window.openNavHelp(); 
+      };
       return container;
     }
   });
