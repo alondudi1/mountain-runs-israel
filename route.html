@@ -515,12 +515,17 @@ window.openFullImage = function(src) {
 
   // הוספת הכפתור למפה פעם אחת בלבד
   if (map) {
-      map.addControl(new LocateControl());
-  }
+  // הוספת הכפתור למפה
+  map.addControl(new LocateControl());
 
+  // הצגת המפה (שינוי השקיפות ל-1)
   setTimeout(() => mapContainer.classList.add('loaded'), 150);
 
-  
+  } catch (err) {
+    console.error("שגיאה בטעינה:", err);
+    // הצגת המפה גם אם יש שגיאה בנתונים
+    mapContainer.classList.add('loaded');
+  }
 }); // סגירת ה-load listener
 </script>
 
