@@ -464,76 +464,72 @@ window.openFullImage = function(src) {
 // 1. טעינת קובץ המנוע (יש לוודא שהקובץ הוסף ב-head)
 // <script src="gps-manager.js"></script>
 
-let userMarker = null;
+// --- ניהול מיקום משתמש (GPS) ---
+  let userMarker = null;
 
-// יצירת האייקון של המשולש
-const triangleIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: '<div id="userTriangle" class="user-location-triangle"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-});
+  const triangleIcon = L.divIcon({
+      className: 'custom-div-icon',
+      html: '<div id="userTriangle" class="user-location-triangle"></div>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+  });
 
-// פונקציה שמתעדכנת מה-GPSManager
-GPSManager.onUpdate(({ latlng, heading }) => {
-    if (!latlng) return;
+  // האזנה לעדכונים מהמנוע החיצוני
+  GPSManager.onUpdate(({ latlng, heading }) => {
+      if (!latlng || !map) return;
 
-    // יצירה או עדכון מיקום המשולש
-    if (!userMarker) {
-        userMarker = L.marker(latlng, { icon: triangleIcon }).addTo(map);
-    } else {
-        userMarker.setLatLng(latlng);
-    }
+      if (!userMarker) {
+          userMarker = L.marker(latlng, { icon: triangleIcon }).addTo(map);
+      } else {
+          userMarker.setLatLng(latlng);
+      }
 
-    // עדכון סיבוב המשולש לפי המצפן
-    const triangleEl = document.getElementById('userTriangle');
-    if (triangleEl && heading !== null) {
-        triangleEl.style.transform = `rotate(${heading}deg)`;
-    }
-});
+      const triangleEl = document.getElementById('userTriangle');
+      if (triangleEl && heading !== null) {
+          triangleEl.style.transform = `rotate(${heading}deg)`;
+      }
+  });
 
-// הוספת כפתור המירכוז למפה (מתחת לעזרה)
-const LocateControl = L.Control.extend({
-    options: { position: 'topright' },
-    onAdd: function() {
-        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-        const button = L.DomUtil.create('a', 'leaflet-control-locate', container);
-        button.innerHTML = '🎯';
-        button.title = 'מרכז אותי';
+  // יצירת פקד המירכוז (🎯)
+  const LocateControl = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd: function() {
+          const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+          const button = L.DomUtil.create('a', 'leaflet-control-locate', container);
+          button.innerHTML = '🎯';
+          button.href = '#';
+          button.title = 'מרכז אותי';
 
-        button.onclick = function(e) {
-            e.preventDefault();
-            GPSManager.requestPermissions(); 
-            
-            // אם כבר יש מיקום - טוס אליו
-            if (GPSManager.currentLocation) {
-                map.flyTo(GPSManager.currentLocation, 16);
-            } else {
-                // אם אין מיקום, ננסה למרכז אוטומטית כשהוא יגיע בפעם הראשונה
-                alert("מנסה להתחבר ל-GPS... וודא שאתה בשטח פתוח");
-            }
-        };
-        return container;
-    }
-});
-  map.addControl(new LocateControl());
+          button.onclick = function(e) {
+              e.preventDefault();
+              GPSManager.requestPermissions(); 
+              if (GPSManager.currentLocation) {
+                  map.flyTo(GPSManager.currentLocation, 16);
+              } else {
+                  alert("מתחבר ל-GPS... וודא שאתה תחת שמיים פתוחים");
+              }
+          };
+          return container;
+      }
+  });
 
-  // --- סיום קוד ה-GPS והמירכוז ---
-    map.addControl(new LocateControl());
+  // הוספת הכפתור למפה פעם אחת בלבד
+  if (map) {
+      map.addControl(new LocateControl());
+  }
+
+  setTimeout(() => mapContainer.classList.add('loaded'), 150);
 
   } catch (err) {
-    console.error("שגיאה במהלך טעינת המפה או הנתונים:", err);
+    console.error("שגיאה בטעינה:", err);
     mapContainer.classList.add('loaded');
   }
-}); // סגירת ה-load listener המקורית
-</script>
-});    
+}); // סגירת ה-load listener
 </script>
 
 <div id="imageModal" style="display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); align-items: center; justify-content: center; cursor: pointer;" onclick="this.style.display='none'">
   <span style="position: absolute; top: 20px; right: 35px; color: #fff; font-size: 40px; font-weight: bold;">&times;</span>
   <img id="fullImage" style="max-width: 90%; max-height: 90%; border: 2px solid #fff; border-radius: 8px;">
-</div>
-  
+</div>  
 </body>
 </html>
