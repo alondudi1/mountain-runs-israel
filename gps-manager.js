@@ -1,12 +1,13 @@
 /**
- * GPS Manager - גרסה עם דיבוג למסך
+ * GPS Manager - גרסה פסיבית (ללא הפעלה אוטומטית)
  */
 const GPSManager = {
     currentLocation: null,
     currentHeading: null,
     callbacks: [],
+    isTracking: false, // מוודא שלא נפעיל פעמיים סתם
 
-    // רישום פונקציות שיקבלו עדכונים
+    // רישום פונקציות שיקבלו עדכונים (כמו המרקר במפה)
     onUpdate: function(callback) {
         this.callbacks.push(callback);
     },
@@ -19,35 +20,38 @@ const GPSManager = {
         }));
     },
 
-    // התחלת מעקב מיקום
+    // הפונקציה הזו מופעלת רק אחרי שהמשתמש לחץ על הכפתור ואישר
     startTracking: function() {
+        if (this.isTracking) return; // אם כבר עוקב, לא לעשות כלום
+        
         if (!navigator.geolocation) {
             alert("הדפדפן שלך לא תומך ב-GPS");
             return;
         }
 
+        this.isTracking = true;
+
         navigator.geolocation.watchPosition(
             (position) => {
-                // הצלחה!
                 this.currentLocation = [position.coords.latitude, position.coords.longitude];
                 this.broadcast();
             },
             (error) => {
-                // כאן התיקון: הצגת סיבת הכישלון למשתמש
-                let msg = "שגיאת GPS לא ידועה";
+                // טיפול בשגיאות רק אם המשתמש יזם את הבקשה
+                let msg = "שגיאת מיקום כללית";
                 switch(error.code) {
                     case error.PERMISSION_DENIED:
-                        msg = "המשתמש או הדפדפן חסמו את הגישה למיקום. בדוק הגדרות פרטיות.";
+                        msg = "הגישה למיקום נחסמה. בדוק הגדרות דפדפן.";
                         break;
                     case error.POSITION_UNAVAILABLE:
-                        msg = "המיקום לא זמין כרגע (נסה לצאת לשטח פתוח).";
+                        msg = "המיקום לא זמין כרגע.";
                         break;
                     case error.TIMEOUT:
-                        msg = "לקח יותר מדי זמן לקבל מיקום.";
+                        msg = "הקליטה חלשה מדי.";
                         break;
                 }
-                alert("תקלה: " + msg);
-                console.warn("GPS Error: ", error.message);
+                console.warn("GPS Warning:", msg);
+                // הערה: הסרתי את ה-alert מכאן כדי שלא יציק אם הקליטה נעלמת לרגע
             },
             { 
                 enableHighAccuracy: true, 
@@ -56,27 +60,28 @@ const GPSManager = {
             }
         );
 
-        // האזנה למצפן
+        // האזנה למצפן (רק אם המכשיר תומך)
         if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientationabsolute', (event) => {
-                if (event.alpha !== null) {
-                    this.currentHeading = 360 - event.alpha;
+            const handleOrientation = (event) => {
+                let heading = null;
+                if (event.webkitCompassHeading) {
+                    heading = event.webkitCompassHeading; // אייפון
+                } else if (event.alpha !== null) {
+                    heading = 360 - event.alpha; // אנדרואיד
+                }
+                
+                if (heading !== null) {
+                    this.currentHeading = heading;
                     this.broadcast();
                 }
-            }, true);
-            
-            window.addEventListener('deviceorientation', (event) => {
-                if (event.webkitCompassHeading) {
-                    this.currentHeading = event.webkitCompassHeading;
-                } else if (event.alpha !== null && !event.absolute) {
-                    this.currentHeading = 360 - event.alpha;
-                }
-                this.broadcast();
-            }, true);
+            };
+
+            window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+            window.addEventListener('deviceorientation', handleOrientation, true);
         }
     },
 
-    // בקשת הרשאות (לאייפון)
+    // זו הפונקציה שהכפתור קורא לה
     requestPermissions: async function() {
         // iOS 13+ דורש בקשה מפורשת למצפן
         if (typeof DeviceOrientationEvent !== 'undefined' && 
@@ -86,15 +91,19 @@ const GPSManager = {
                 if (permission === 'granted') {
                     this.startTracking();
                 } else {
-                    alert("לא אישרת גישה לחיישני תנועה (מצפן).");
-                    this.startTracking(); // ננסה בכל זאת GPS בלי מצפן
+                    alert("לא אישרת גישה למצפן, ננסה מיקום בלבד.");
+                    this.startTracking();
                 }
             } catch (error) {
                 console.error(error);
                 this.startTracking();
             }
         } else {
+            // מכשירים רגילים (לא אייפון חדש) - ישר מפעילים
             this.startTracking();
         }
     }
 };
+
+// חשוב מאוד: אין כאן שורה שמפעילה את GPSManager.startTracking()
+// ההפעלה תתבצע רק דרך route.html בלחיצה על הכפתור
