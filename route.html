@@ -227,6 +227,7 @@
   const params = new URLSearchParams(window.location.search);
   const routeId = params.get('id');
 
+  let map; // הגדרת המשתנה מחוץ לבלוק ה-try כדי שיהיה נגיש לכולם
   try {
     const routes = await loadJSON('data/routes.json');
     const route = routes.find(r => r.id === routeId);
@@ -282,7 +283,7 @@
     });
 
     // יצירת המפה עם הגדרת IHM כברירת מחדל
-    const map = L.map('map', { 
+    map = L.map('map', { 
       layers: [ihm] 
     });
 
@@ -453,7 +454,7 @@ L.control.scale({
   document.body.removeChild(link);
 };
   
-function openFullImage(src) {
+window.openFullImage = function(src) {
   const modal = document.getElementById('imageModal');
   const fullImg = document.getElementById('fullImage');
   fullImg.src = src;
@@ -502,9 +503,14 @@ const LocateControl = L.Control.extend({
 
         button.onclick = function(e) {
             e.preventDefault();
-            GPSManager.requestPermissions(); // בקשת הרשאה בלחיצה הראשונה
+            GPSManager.requestPermissions(); 
+            
+            // אם כבר יש מיקום - טוס אליו
             if (GPSManager.currentLocation) {
-                map.flyTo(GPSManager.currentLocation, 16); // "טיסה" למיקום
+                map.flyTo(GPSManager.currentLocation, 16);
+            } else {
+                // אם אין מיקום, ננסה למרכז אוטומטית כשהוא יגיע בפעם הראשונה
+                alert("מנסה להתחבר ל-GPS... וודא שאתה בשטח פתוח");
             }
         };
         return container;
