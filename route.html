@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
 
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-M7PK7VG6XE"></script>
   <script src="gps-manager.js"></script>
   
@@ -426,7 +425,7 @@ L.control.scale({
         hoverMarker.closeTooltip();
       });
 
-     
+      setTimeout(() => mapContainer.classList.add('loaded'), 150);
       L.polylineDecorator(polyline, {
         patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff', weight: 2 } }) }]
       }).addTo(map);
@@ -461,6 +460,8 @@ window.openFullImage = function(src) {
   modal.style.display = 'flex'; // מציג את החלון
 }
 
+// 1. טעינת קובץ המנוע (יש לוודא שהקובץ הוסף ב-head)
+// <script src="gps-manager.js"></script>
 
 // --- ניהול מיקום משתמש (GPS) ---
   let userMarker = null;
@@ -518,6 +519,7 @@ window.openFullImage = function(src) {
 
   // הצגת המפה (שינוי השקיפות ל-1)
   setTimeout(() => mapContainer.classList.add('loaded'), 150);
+  }
 
   } catch (err) {
     console.error("שגיאה בטעינה:", err);
