@@ -173,6 +173,20 @@
         padding-right: 4px;
       }
     }
+
+    /* --- תיקון כפתור חזרה לנייד --- */
+    @media (max-width: 600px) {
+      /* העלמת המילה 'חזרה' במסכים קטנים */
+      .desktop-text {
+        display: none;
+      }
+      
+      /* התאמה קלה של הכפתור כשיש בו רק חץ */
+      .back-link {
+        font-size: 18px; /* הגדלת החץ מעט שיהיה ברור */
+        padding: 6px 12px; /* דיוק המרווחים סביב החץ */
+      }
+    }
     
   </style>
 </head>
@@ -181,7 +195,7 @@
 
 <div class="container">
   <div class="hero">
-    <a href="index.html" class="back-link">← חזרה</a>
+    <a href="index.html" class="back-link">← <span class="desktop-text">חזרה</span></a>
     <h1 id="routeName">
       <img src="IMG_9648.jpeg" alt="Mountain Runs Israel Logo" class="route-logo">
       <span id="routeNameText">טוען מסלול…</span>
