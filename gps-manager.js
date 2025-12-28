@@ -1,5 +1,5 @@
 /**
- * GPS Manager - מנוע איסוף נתוני מיקום וכיוון
+ * GPS Manager - גרסה עם דיבוג למסך
  */
 const GPSManager = {
     currentLocation: null,
@@ -22,23 +22,43 @@ const GPSManager = {
     // התחלת מעקב מיקום
     startTracking: function() {
         if (!navigator.geolocation) {
-            console.error("Geolocation is not supported by this browser.");
+            alert("הדפדפן שלך לא תומך ב-GPS");
             return;
         }
 
         navigator.geolocation.watchPosition(
             (position) => {
+                // הצלחה!
                 this.currentLocation = [position.coords.latitude, position.coords.longitude];
                 this.broadcast();
             },
-            (error) => console.warn("GPS Error: ", error.message),
-            { enableHighAccuracy: true, maximumAge: 1000 }
+            (error) => {
+                // כאן התיקון: הצגת סיבת הכישלון למשתמש
+                let msg = "שגיאת GPS לא ידועה";
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        msg = "המשתמש או הדפדפן חסמו את הגישה למיקום. בדוק הגדרות פרטיות.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        msg = "המיקום לא זמין כרגע (נסה לצאת לשטח פתוח).";
+                        break;
+                    case error.TIMEOUT:
+                        msg = "לקח יותר מדי זמן לקבל מיקום.";
+                        break;
+                }
+                alert("תקלה: " + msg);
+                console.warn("GPS Error: ", error.message);
+            },
+            { 
+                enableHighAccuracy: true, 
+                maximumAge: 0, 
+                timeout: 10000 
+            }
         );
 
-        // האזנה למצפן (כיוון המכשיר)
+        // האזנה למצפן
         if (window.DeviceOrientationEvent) {
             window.addEventListener('deviceorientationabsolute', (event) => {
-                // עבור אנדרואיד
                 if (event.alpha !== null) {
                     this.currentHeading = 360 - event.alpha;
                     this.broadcast();
@@ -46,7 +66,6 @@ const GPSManager = {
             }, true);
             
             window.addEventListener('deviceorientation', (event) => {
-                // עבור iOS (אם זמין)
                 if (event.webkitCompassHeading) {
                     this.currentHeading = event.webkitCompassHeading;
                 } else if (event.alpha !== null && !event.absolute) {
@@ -57,21 +76,24 @@ const GPSManager = {
         }
     },
 
-    // בקשת הרשאות (נדרש במיוחד ב-iOS)
+    // בקשת הרשאות (לאייפון)
     requestPermissions: async function() {
-        // בדיקת הרשאת מצפן ל-iOS
+        // iOS 13+ דורש בקשה מפורשת למצפן
         if (typeof DeviceOrientationEvent !== 'undefined' && 
             typeof DeviceOrientationEvent.requestPermission === 'function') {
             try {
                 const permission = await DeviceOrientationEvent.requestPermission();
                 if (permission === 'granted') {
                     this.startTracking();
+                } else {
+                    alert("לא אישרת גישה לחיישני תנועה (מצפן).");
+                    this.startTracking(); // ננסה בכל זאת GPS בלי מצפן
                 }
             } catch (error) {
-                console.error("Permission request failed", error);
+                console.error(error);
+                this.startTracking();
             }
         } else {
-            // דפדפנים רגילים (אנדרואיד ומחשב)
             this.startTracking();
         }
     }
