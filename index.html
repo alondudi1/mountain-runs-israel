@@ -89,9 +89,32 @@
       width: 320px;
       border-left: 1px solid #ddd;
       padding: 10px;
-      overflow-y: auto;
+      
+      /* --- שיפורי גלילה --- */
+      overflow-y: auto; /* מאפשר גלילה */
+      -webkit-overflow-scrolling: touch; /* גלילה חלקה באייפון */
+      overscroll-behavior: contain; /* מונע גלילה של כל העמוד */
+      
       background: #fff;
       box-sizing: border-box;
+      
+      /* הגדרות לפיירפוקס */
+      scrollbar-width: thin;
+      scrollbar-color: #bbb transparent;
+    }
+
+    /* --- עיצוב פס גלילה (כרום, ספארי, אייפון) --- */
+    #sidebar::-webkit-scrollbar {
+      width: 6px; /* רוחב הפס */
+    }
+    #sidebar::-webkit-scrollbar-track {
+      background: transparent; 
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+      background-color: rgba(0,0,0,0.2); /* צבע אפור חצי שקוף */
+      border-radius: 4px; /* פינות עגולות */
+      border: 2px solid transparent; 
+      background-clip: content-box;
     }
 
     /* התוספת היחידה ב-CSS: הגדרת גודל ללוגו */
