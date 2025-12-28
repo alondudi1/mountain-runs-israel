@@ -81,7 +81,7 @@
       padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px;
     }
     
-    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; }
+    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; overflow: hidden; }
     #app { display: flex; height: 100vh; flex-direction: row-reverse; }
     #map { flex: 1; }
 
@@ -149,25 +149,46 @@
     }
 
     /* --- התאמות לנייד --- */
+    /* --- התאמות לנייד: חלוקה שווה 50/50 --- */
     @media (max-width: 800px) {
-      #app { flex-direction: column; }
+      /* הגדרת המיכל הראשי לגובה המסך המדויק */
+      #app { 
+        flex-direction: column; 
+        height: 100dvh; 
+        width: 100%;
+      }
       
+      /* המפה: תופסת בדיוק חצי מסך */
+      #map { 
+        height: 50dvh !important; 
+        flex: none; /* מונע ממנה להתרחב או להתכווץ */
+        z-index: 1;
+      }
+      
+      /* רשימת המסלולים: תופסת את החצי השני */
       #sidebar { 
         width: 100%; 
-        height: 40vh; 
-        border-left: none; 
-        border-top: 1px solid #ddd;
+        height: 50dvh !important; 
         
-        /* התיקון החדש: מוסיף שטח ריק בסוף הגלילה כדי שהכרטיס הצף לא יסתיר כלום */
-        padding-bottom: 150px !important; 
+        border-left: none; 
+        border-top: 2px solid #ddd; /* קו הפרדה ברור */
+        
+        /* שיפורי גלילה בתוך הרשימה */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 100px !important; /* רווח בסוף כדי שהמסלול האחרון לא יוסתר */
       }
-      #map { height: 60vh; }
       
-      /* הקטנת הלוגו בנייד */
+      /* הקטנת הלוגו */
       .sidebar-logo {
         width: auto;
-        max-height: 80px; 
+        max-height: 60px; /* הקטנתי עוד קצת כדי לחסוך מקום בחצי המסך */
         margin: 0 auto 10px auto; 
+      }
+      
+      /* וידוא שכפתורי המפה לא נדבקים לקצה העליון */
+      .leaflet-top {
+        top: 10px !important;
       }
     }
     .leaflet-top.leaflet-left .leaflet-control {
