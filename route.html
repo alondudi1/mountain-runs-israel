@@ -426,7 +426,7 @@ L.control.scale({
         hoverMarker.closeTooltip();
       });
 
-      setTimeout(() => mapContainer.classList.add('loaded'), 150);
+     
       L.polylineDecorator(polyline, {
         patterns: [{ offset: '10%', repeat: '20%', symbol: L.Symbol.arrowHead({ pixelSize: 10, pathOptions: { color: '#fff', weight: 2 } }) }]
       }).addTo(map);
@@ -520,10 +520,7 @@ window.openFullImage = function(src) {
 
   setTimeout(() => mapContainer.classList.add('loaded'), 150);
 
-  } catch (err) {
-    console.error("שגיאה בטעינה:", err);
-    mapContainer.classList.add('loaded');
-  }
+  
 }); // סגירת ה-load listener
 </script>
 
