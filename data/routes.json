@@ -32,5 +32,16 @@
     "geometry_file": "geometry/har_rechev.json",
     "description_file": "har_rechev.html",
     "is_premium": false
+  },
+  {
+    "id": "nitsana14",
+    "name": "מורדות הר רכב (14 ק״מ)",
+    "region": "נגב",
+    "distance_km": 14,
+    "elev_gain_m": 200,
+    "difficulty": 16,
+    "geometry_file": "geometry/nitsana14.json",
+    "description_file": "nitsana14.html",
+    "is_premium": false
   }
 ]
