@@ -319,10 +319,113 @@
 
     .close-contact { position: absolute; left: 15px; top: 15px; font-size: 24px; cursor: pointer; color: #999; }
 
+    /* --- מסך פתיחה אטמוספרי (Splash Screen) --- */
+    .welcome-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      /* התמונה שלך עם שכבת כיסוי כהה לקריאות מקסימלית */
+      background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('images/IMG_9648.jpeg');
+      background-size: cover;
+      background-position: center;
+      z-index: 5000; /* מעל הכל */
+      display: flex; /* יוסתר אוטומטית ע"י הסקריפט אם צריך */
+      align-items: center; justify-content: center;
+      direction: rtl;
+      transition: opacity 0.6s ease;
+    }
+
+    .welcome-content {
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      color: #fff;
+      padding: 20px;
+      animation: fadeIn 1s ease-out;
+    }
+
+    /* כותרות וטקסטים */
+    .welcome-title { 
+      font-size: 32px; 
+      font-weight: 800; 
+      margin-bottom: 5px; 
+      color: #fff; 
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .welcome-subtitle { 
+      font-size: 18px; 
+      font-weight: 300; 
+      margin-bottom: 30px; 
+      color: #ddd; 
+      letter-spacing: 1px;
+    }
+    
+    .welcome-body { 
+      font-size: 16px; 
+      line-height: 1.6; 
+      margin-bottom: 30px; 
+      color: #f0f0f0;
+      background: rgba(255,255,255,0.1); /* רקע שקוף עדין מאוד לקריאות */
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(5px); /* טשטוש עדין מאחורי הטקסט */
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .welcome-signature {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+      color: #fff;
+    }
+
+    /* כפתור כניסה */
+    .btn-enter {
+      background: white;
+      color: #333;
+      border: none;
+      padding: 12px 35px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+    .btn-enter:hover {
+      transform: scale(1.05);
+      background: #f0f0f0;
+      box-shadow: 0 0 30px rgba(255,255,255,0.5);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
   </style>
 </head>
 
 <body>
+
+<div id="welcomeScreen" class="welcome-overlay" style="display:none;"> <div class="welcome-content">
+    
+    <h1 class="welcome-title">ברוכים הבאים לבנק המסלולים</h1>
+    <div class="welcome-subtitle">הצצה למאגר האישי שלי לריצת שטח</div>
+    
+    <div class="welcome-body">
+      ריכזתי כאן את המסלולים האהובים עלי מתוך רצון לשתף ידע עם הקהילה.<br>
+      המידע המוצג הוא להתרשמות ולתכנון בלבד. השטח דינמי ומשתנה, ולכן השימוש בקבצים הוא באחריות המשתמש בלבד.
+      
+      <span class="welcome-signature">
+        נתראה בשבילים,<br>
+        [השם שלך]
+      </span>
+    </div>
+
+    <button class="btn-enter" onclick="closeWelcome()">כניסה למפה</button>
+  </div>
+</div>
+  
 <div id="app">
   <div id="map"></div>
   <div id="sidebar">
@@ -366,6 +469,40 @@
   </div>
 
 <script>
+
+  /* --- ניהול מסך פתיחה חכם (פעם ב-30 יום) --- */
+  
+  document.addEventListener("DOMContentLoaded", function() {
+      const welcomeScreen = document.getElementById('welcomeScreen');
+      const lastSeenStr = localStorage.getItem('welcomeSeenDate');
+      const now = new Date().getTime();
+      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000; // חישוב 30 יום במילישניות
+
+      // האם להציג את המסך?
+      // כן, אם: אין תאריך שמור (פעם ראשונה) או שעברו 30 יום מאז הפעם האחרונה
+      if (!lastSeenStr || (now - parseInt(lastSeenStr) > thirtyDaysInMs)) {
+          welcomeScreen.style.display = 'flex';
+      } else {
+          // אחרת, הסתר (למרות שמוגדר none ב-HTML, ליתר ביטחון)
+          welcomeScreen.style.display = 'none';
+      }
+  });
+
+  function closeWelcome() {
+      const welcomeScreen = document.getElementById('welcomeScreen');
+      
+      // 1. אנימציית היעלמות
+      welcomeScreen.style.opacity = '0';
+      
+      // 2. שמירת הזמן הנוכחי בזיכרון הדפדפן
+      localStorage.setItem('welcomeSeenDate', new Date().getTime().toString());
+
+      // 3. הסרה מהמסך אחרי סיום האנימציה
+      setTimeout(() => {
+          welcomeScreen.style.display = 'none';
+      }, 600);
+  }
+  
 (async function () {
 
   const statusEl = document.getElementById('status');
