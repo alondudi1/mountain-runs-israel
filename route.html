@@ -221,6 +221,75 @@
         display: block;
       }
     }
+
+    /* --- עיצוב חלון תרומה והורדה (Modal) --- */
+    .download-modal {
+      display: none; /* מוסתר כברירת מחדל */
+      position: fixed;
+      z-index: 3000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      align-items: center; justify-content: center;
+      direction: rtl;
+    }
+    
+    .download-modal-content {
+      background-color: #fff;
+      padding: 24px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .dm-title { font-size: 20px; font-weight: bold; color: #d32f2f; margin-bottom: 12px; }
+    .dm-text { font-size: 15px; color: #444; line-height: 1.5; margin-bottom: 15px; }
+    
+    .dm-warning { 
+      background: #fff3e0; 
+      color: #e65100; 
+      padding: 10px; 
+      border-radius: 6px; 
+      font-size: 13px; 
+      font-weight: bold; 
+      margin-bottom: 20px;
+      border: 1px solid #ffe0b2;
+    }
+
+    .donation-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      justify-content: center;
+    }
+
+    .btn-option {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: opacity 0.2s;
+    }
+    .btn-option:hover { opacity: 0.9; }
+
+    .btn-paypal { background-color: #0070ba; } /* כחול פייפאל */
+    .btn-paybox { background-color: #00a6e2; } /* תכלת פייבוקס */
+
+    .btn-free {
+      width: 100%;
+      background: #f5f5f5; color: #666; border: 1px solid #ddd; padding: 10px;
+      border-radius: 8px; font-size: 14px; cursor: pointer;
+    }
+    .btn-free:hover { background: #eee; color: #333; }
+    
+    .dm-close { position: absolute; left: 15px; top: 10px; font-size: 24px; cursor: pointer; color: #aaa; }
     
   </style>
 </head>
@@ -519,17 +588,35 @@
       }).addTo(map);
     }
 
-    // הגדרת כפתור ההורדה
+    // --- לוגיקה חדשה: פתיחת חלון תרומה לפני הורדה ---
+    
+    const dlModal = document.getElementById('downloadModal');
+    
+    // 1. לחיצה על "הורדת GPX" פותחת את החלון
     document.getElementById('downloadBtn').onclick = () => {
+      dlModal.style.display = 'flex';
+    };
+
+    // 2. פונקציה לסגירת החלון
+    window.closeDownloadModal = function() {
+      dlModal.style.display = 'none';
+    }
+
+    // 3. ביצוע ההורדה בפועל (מופעל ע"י כפתורי התשלום או כפתור החינם)
+    window.downloadFile = function() {
       const gpxFilename = `${routeId}.gpx`;
       const gpxPath = `data/gpx/${gpxFilename}`;
 
-      gtag('event', 'file_download', {
-        'file_name': gpxFilename,
-        'file_extension': 'gpx',
-        'route_id': routeId
-      });
+      // דיווח לגוגל אנליטיקס (אם קיים)
+      if (typeof gtag === 'function') {
+          gtag('event', 'file_download', {
+            'file_name': gpxFilename,
+            'file_extension': 'gpx',
+            'route_id': routeId
+          });
+      }
       
+      // יצירת לינק נסתר ולחיצה עליו
       const link = document.createElement('a');
       link.href = gpxPath;
       link.download = gpxFilename;
@@ -537,6 +624,13 @@
       link.click();
       document.body.removeChild(link);
     };
+    
+    // סגירת החלון בלחיצה על הרקע הכהה
+    window.onclick = function(event) {
+      if (event.target == dlModal) {
+        dlModal.style.display = "none";
+      }
+    }
 
     // --- תיקון: הגדרת פונקציית התמונות כגלובלית בתוך הסקריפט ---
     window.openFullImage = function(src) {
@@ -611,6 +705,35 @@
   </div>  
  
   <div id="scrollArrow" class="scroll-arrow">⌄</div>
+
+  <div id="downloadModal" class="download-modal">
+  <div class="download-modal-content">
+    <span class="dm-close" onclick="closeDownloadModal()">&times;</span>
+    <div class="dm-title">רגע לפני שיוצאים לשטח... ⛰️</div>
+    
+    <div class="dm-text">
+      הכנת המסלול דרשה מאמץ רב. תרומה סמלית (ממש כמו מחיר של ג'ל) תעזור לי להמשיך ולתחזק את האתר.
+    </div>
+
+    <div class="dm-warning">
+      ⚠️ הקובץ מיועד לשימוש אישי בלבד ואין להעבירו.
+    </div>
+
+    <div class="donation-options">
+      <a href="https://paypal.me/trailsbank" target="_blank" class="btn-option btn-paypal" onclick="downloadFile()">
+        🅿️ PayPal
+      </a>
+      
+      <a href="https://links.payboxapp.com/BOfjvkqgwZb" target="_blank" class="btn-option btn-paybox" onclick="downloadFile()">
+        📱 PayBox
+      </a>
+    </div>
+
+    <button class="btn-free" onclick="downloadFile(); closeDownloadModal()">
+      הורדה ללא תרומה (בחינם)
+    </button>
+  </div>
+</div>
   
 </body>
 </html>
