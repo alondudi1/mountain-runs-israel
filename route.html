@@ -38,7 +38,57 @@
     .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
     .card h3 { margin-top: 0; }
     .info-item { margin-bottom: 8px; font-size: 14px; }
-    .download { margin-top: 16px; padding: 12px; text-align: center; border: 1px dashed #bbb; border-radius: 10px; color: #777; cursor: pointer; transition: all 0.3s; }
+    /* --- כפתור הורדה משודרג (בולט ויוקרתי) --- */
+    .download {
+      background: linear-gradient(135deg, #ff512f 0%, #dd2476 100%); /* כתום-אדום מודרני */
+      color: white;
+      text-align: center;
+      padding: 14px;
+      margin-top: 20px;
+      border-radius: 50px; /* עגול יותר */
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: 0 4px 15px rgba(221, 36, 118, 0.4); /* צללית תואמת לצבע */
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 2px solid white; /* מסגרת לבנה עדינה להדגשה */
+    }
+
+    .download:hover {
+      transform: translateY(-2px); /* קופץ קצת למעלה */
+      box-shadow: 0 6px 20px rgba(221, 36, 118, 0.6);
+    }
+
+    .download:active {
+      transform: translateY(1px);
+    }
+
+    /* --- הקישור שמתחת לכפתור --- */
+    .contact-link-wrapper {
+      text-align: center;
+      margin-top: 10px;
+      margin-bottom: 5px;
+    }
+
+    .contact-trigger {
+      font-size: 13px;
+      color: #666;
+      text-decoration: none;
+      cursor: pointer;
+      border-bottom: 1px dashed #999; /* קו תחתון עדין ומקווקו */
+      padding-bottom: 2px;
+      transition: color 0.2s;
+    }
+    .contact-trigger:hover {
+      color: #dd2476; /* משתנה לאדום של הכפתור במעבר עכבר */
+      border-bottom-style: solid;
+    }
+
+    /* --- עיצוב המודאל (במידה וחסר לך) --- */
+    .contact-modal { display: none; position: fixed; z-index: 4000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; direction: rtl; }
+    .contact-content { background-color: #fff; padding: 25px; border-radius: 12px; width: 90%; max-width: 360px; position: relative; text-align: right; }
+    .contact-form input, .contact-form textarea, .contact-form select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-family: inherit;}
+    .btn-send-email { width: 100%; background-color: #007bff; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 5px;}
     .elevation-card { margin: 16px 0 24px; background: #fff; border-radius: 12px; padding: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
     .elevation-title { font-weight: 700; margin-bottom: 8px; }
     .back-link { position: absolute; top: 8px; left: 8px; padding: 8px 14px; background: #fff; color: #222; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-weight: 600; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
@@ -327,7 +377,15 @@
       <div class="info-item" id="infoDistance"></div>
       <div class="info-item" id="infoAscent"></div>
       <div class="info-item" id="infoDifficulty"></div>
-      <div class="download" id="downloadBtn">⬇️ הורדת GPX</div>
+      <div class="download" id="downloadBtn">
+        ⬇️ הורדת קובץ GPX
+      </div>
+
+      <div class="contact-link-wrapper">
+        <span class="contact-trigger" onclick="openRouteContact()">
+          יש לכם שאלות או עדכון מהשטח? כתבו לנו 💬
+        </span>
+      </div>
     </div>
   </div>
 </div>
@@ -736,6 +794,61 @@
 
   </div>
 </div>
+
+  <div id="contactModal" class="contact-modal">
+  <div class="contact-content">
+    <span style="position:absolute; left:15px; top:15px; font-size:24px; cursor:pointer; color:#999;" onclick="closeContact()">&times;</span>
+    <h3 style="margin-top:0; text-align:center; color:#333;">עדכונים ושאלות ✍️</h3>
+    
+    <form action="https://formsubmit.co/YOUR_EMAIL@GMAIL.COM" method="POST" class="contact-form">
+      <input type="hidden" name="_subject" id="emailSubject" value="פנייה חדשה מאתר המסלולים">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="hidden" name="שם_המסלול" id="routeRefField">
+
+      <label>שמך:</label>
+      <input type="text" name="שם" placeholder="ישראל ישראלי" required>
+
+      <label>מייל או נייד לחזרה:</label>
+      <input type="text" name="פרטי_קשר" placeholder="כדי שנוכל לענות..." required>
+
+      <label>העדכון או השאלה שלך:</label>
+      <textarea name="תוכן_ההודעה" rows="4" placeholder="היי, רציתי לעדכן ש..." required></textarea>
+
+      <button type="submit" class="btn-send-email">שליחה ✉️</button>
+    </form>
+  </div>
+</div>
+
+<script>
+    // --- לוגיקה לטופס דיווח חכם ---
+    function openRouteContact() {
+      // 1. פתיחת החלון
+      document.getElementById('contactModal').style.display = 'flex';
+      
+      // 2. שליפת שם המסלול מהכותרת בדף (מניח שיש לך אלמנט עם id="routeNameText")
+      // אם אין לך id כזה, תגיד לי ואתן לך פתרון אחר
+      let currentRouteName = "מסלול לא מזוהה";
+      const nameElement = document.getElementById('routeNameText');
+      if (nameElement) {
+          currentRouteName = nameElement.innerText;
+      }
+      
+      // 3. עדכון השדות הנסתרים
+      document.getElementById('routeRefField').value = currentRouteName;
+      document.getElementById('emailSubject').value = "עדכון/שאלה לגבי: " + currentRouteName;
+    }
+
+    function closeContact() {
+      document.getElementById('contactModal').style.display = 'none';
+    }
+
+    // סגירה בלחיצה בחוץ
+    window.addEventListener('click', (e) => {
+      if (e.target == document.getElementById('contactModal')) {
+        closeContact();
+      }
+    });
+</script>
   
 </body>
 </html>
