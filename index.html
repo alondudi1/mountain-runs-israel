@@ -264,6 +264,61 @@
     .rp-btn:hover { background: #b71c1c; }
     .rp-meta:empty { display: none; }
 
+    /* --- עיצוב טופס צור קשר (Contact Us) --- */
+    .contact-modal {
+      display: none; /* מוסתר כברירת מחדל */
+      position: fixed;
+      z-index: 4000; /* מעל הכל */
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center;
+      direction: rtl;
+    }
+
+    .contact-content {
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 360px;
+      position: relative;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      text-align: right;
+    }
+
+    .contact-title { font-size: 20px; font-weight: 800; color: #333; margin-bottom: 15px; text-align: center; }
+    
+    .contact-form label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #555; }
+    
+    .contact-form input, 
+    .contact-form textarea,
+    .contact-form select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    .btn-send-email {
+      width: 100%;
+      background-color: #007bff; /* כחול */
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn-send-email:hover { background-color: #0056b3; }
+
+    .close-contact { position: absolute; left: 15px; top: 15px; font-size: 24px; cursor: pointer; color: #999; }
+
   </style>
 </head>
 
@@ -275,6 +330,11 @@
     
     <div style="font-weight:800; margin-bottom:8px;">מסלולים</div>
     <div id="routesList"></div>
+    <div style="margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 15px;">
+      <button onclick="openContact()" style="background:none; border:none; color:#666; cursor:pointer; font-weight:bold; text-decoration:underline; font-size:14px;">
+        מצאת טעות? יש לך רעיון? צור קשר 💬
+      </button>
+    </div>
     <div class="status" id="status">טוען…</div>
   </div>
 </div>
@@ -510,6 +570,61 @@
   });
 
 })();
+
+  /* --- ניהול חלון צור קשר --- */
+  
+  function openContact() {
+    document.getElementById('contactModal').style.display = 'flex';
+  }
+  
+  function closeContact() {
+    document.getElementById('contactModal').style.display = 'none';
+  }
+
+  // סגירה בלחיצה מחוץ לחלון (על הרקע הכהה)
+  // הערה: אם כבר יש לך window.onclick בקוד (למשל למודאלים אחרים), 
+  // כדאי לאחד אותם, אבל הקוד הזה יעבוד גם לבד אם הוא האחרון
+  window.addEventListener('click', function(event) {
+    const contactModal = document.getElementById('contactModal');
+    if (event.target == contactModal) {
+      contactModal.style.display = "none";
+    }
+  });
+  
 </script>
+
+  <div id="contactModal" class="contact-modal">
+  <div class="contact-content">
+    <span class="close-contact" onclick="closeContact()">&times;</span>
+    <div class="contact-title">יש לך שאלה או המלצה?</div>
+    
+    <form action="https://formsubmit.co/alondudi1@gmail.com" method="POST" class="contact-form">
+      
+      <input type="hidden" name="_subject" value="פנייה חדשה מאתר המסלולים!">
+      <input type="hidden" name="_captcha" value="false">
+      <label>איך קוראים לך?</label>
+      <input type="text" name="שם" placeholder="השם שלך..." required>
+
+      <label>איך לחזור אליך? (מייל או טלפון)</label>
+      <input type="text" name="פרטי_קשר" placeholder="מייל או נייד" required>
+
+      <label>נושא הפנייה:</label>
+      <select name="נושא">
+        <option value="שאלה כללית">שאלה כללית</option>
+        <option value="דיווח על תקלה">דיווח על תקלה / טעות</option>
+        <option value="המלצה למסלול">יש לי המלצה למסלול!</option>
+        <option value="סתם לפרגן">סתם לפרגן ❤️</option>
+      </select>
+
+      <label>ההודעה שלך:</label>
+      <textarea name="תוכן_ההודעה" rows="4" placeholder="כתוב כאן את ההודעה..." required></textarea>
+
+      <button type="submit" class="btn-send-email">
+        שליחת הודעה ✉️
+      </button>
+    </form>
+  </div>
+</div>
+  
 </body>
 </html>
