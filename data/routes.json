@@ -36,7 +36,7 @@
   {
     "id": "nitsana14",
     "name": "פיתחת ניצנה (14 ק״מ)",
-    "region": "הרי ירושלים",
+    "region": "נגב",
     "distance_km": 14,
     "elev_gain_m": 200,
     "difficulty": 16,
@@ -47,7 +47,7 @@
   {
     "id": "mata18",
     "name": "פאל ואדי פוכין (18 ק״מ)",
-    "region": "נגב",
+    "region": "הרי ירושלים",
     "distance_km": 18,
     "elev_gain_m": 600,
     "difficulty": 24,
