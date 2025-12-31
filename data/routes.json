@@ -16,8 +16,8 @@
     "name": "סכינים מעל עין בוקק (21 ק״מ)",
     "region": "מדבר יהודה",
     "distance_km": 21,
-    "elev_gain_m": 750,
-    "difficulty": 28,
+    "elev_gain_m": 950,
+    "difficulty": 30,
     "geometry_file": "geometry/bokek21.json",
     "description_file": "bokek21.html",
     "is_premium": false
