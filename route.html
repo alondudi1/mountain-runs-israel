@@ -661,16 +661,16 @@
     }
 
     // 3. ביצוע ההורדה בפועל (מופעל ע"י כפתורי התשלום או כפתור החינם)
-    window.downloadFile = function() {
+    window.downloadFile = function(paymentMethod) {
       const gpxFilename = `${routeId}.gpx`;
       const gpxPath = `data/gpx/${gpxFilename}`;
 
-      // דיווח לגוגל אנליטיקס (אם קיים)
+      // דיווח לגוגל אנליטיקס כולל סוג התשלום
       if (typeof gtag === 'function') {
-          gtag('event', 'file_download', {
+          gtag('event', 'route_download', { // שיניתי את שם האירוע ל-route_download שיהיה ברור
+            'route_name': routeId,
             'file_name': gpxFilename,
-            'file_extension': 'gpx',
-            'route_id': routeId
+            'method': paymentMethod // כאן נכנס הדיווח (paypal, paybox, free)
           });
       }
       
@@ -773,18 +773,18 @@
     <div class="dm-text">
       הכנת המסלול דרשה מאמץ רב. תרומה סמלית (ממש כמו מחיר של ג'ל) תעזור לי להמשיך ולתחזק את האתר.
     </div>
-
+//https://paypal.me/trailsbank  https://links.payboxapp.com/BOfjvkqgwZb
     <div class="donation-options">
-      <a href="https://paypal.me/trailsbank" target="_blank" class="btn-option btn-paypal" onclick="downloadFile()">
+      <a href="https://paypal.me/trailsbank" target="_blank" class="btn-option btn-paypal" onclick="downloadFile('paypal')">
         🅿️ PayPal
       </a>
       
-      <a href="https://links.payboxapp.com/BOfjvkqgwZb" target="_blank" class="btn-option btn-paybox" onclick="downloadFile()">
+      <a href="https://links.payboxapp.com/BOfjvkqgwZb" target="_blank" class="btn-option btn-paybox" onclick="downloadFile('paybox')">
         📱 PayBox
       </a>
     </div>
 
-    <button class="btn-free" onclick="downloadFile(); closeDownloadModal()">
+    <button class="btn-free" onclick="downloadFile('free'); closeDownloadModal()">
       הורדה ללא תרומה (בחינם)
     </button>
 
