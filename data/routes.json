@@ -54,5 +54,16 @@
     "geometry_file": "geometry/mata18.json",
     "description_file": "mata18.html",
     "is_premium": false
+  },
+  {
+    "id": "nesharim33",
+    "name": "מרמות לנחל אלעל וחזרה (33 ק״מ)",
+    "region": "רמת הגולן",
+    "distance_km": 33,
+    "elev_gain_m": 900,
+    "difficulty": 42,
+    "geometry_file": "geometry/nesharim33.json",
+    "description_file": "nesharim33.html",
+    "is_premium": false
   }
 ]
