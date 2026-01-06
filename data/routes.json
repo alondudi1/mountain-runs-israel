@@ -65,5 +65,16 @@
     "geometry_file": "geometry/nesharim33.json",
     "description_file": "nesharim33.html",
     "is_premium": false
+  },
+  {
+    "id": "bircatram29",
+    "name": "צפון הרמה (29 ק״מ)",
+    "region": "רמת הגולן",
+    "distance_km": 29,
+    "elev_gain_m": 1200,
+    "difficulty": 41,
+    "geometry_file": "geometry/bircatram29.json",
+    "description_file": "bircatram29.html",
+    "is_premium": false
   }
 ]
