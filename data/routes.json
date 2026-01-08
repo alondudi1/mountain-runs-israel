@@ -76,5 +76,16 @@
     "geometry_file": "geometry/bircatram29.json",
     "description_file": "bircatram29.html",
     "is_premium": false
+  },
+  {
+    "id": "dawara23",
+    "name": "ראס דווארה (23 ק״מ)",
+    "region": "מדבר יהודה",
+    "distance_km": 23,
+    "elev_gain_m": 800,
+    "difficulty": 31,
+    "geometry_file": "geometry/dawara23.json",
+    "description_file": "dawara23.html",
+    "is_premium": false
   }
 ]
