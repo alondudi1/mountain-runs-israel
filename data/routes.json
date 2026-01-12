@@ -87,5 +87,15 @@
     "geometry_file": "geometry/dawara23.json",
     "description_file": "dawara23.html",
     "is_premium": false
-  }
+  },
+  {
+    "id": "kina28",
+    "name": "גבי קינה וקטר שביב (28 ק״מ)",
+    "region": "נגב",
+    "distance_km": 28,
+    "elev_gain_m": 600,
+    "difficulty": 34,
+    "geometry_file": "geometry/kina28.json",
+    "description_file": "kina28.html",
+    "is_premium": false
 ]
