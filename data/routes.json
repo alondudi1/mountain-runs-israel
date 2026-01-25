@@ -109,5 +109,16 @@
     "geometry_file": "geometry/daras24.json",
     "description_file": "daras24.html",
     "is_premium": false
+  },
+ {
+    "id": "dalya22",
+    "name": "מעין הוד דרך דליה לעין כרמל (22 ק״מ)",
+    "region": "נגב",
+    "distance_km": 22,
+    "elev_gain_m": 600,
+    "difficulty": 28,
+    "geometry_file": "geometry/dalya22.json",
+    "description_file": "dalya22.html",
+    "is_premium": false
   }
 ]
