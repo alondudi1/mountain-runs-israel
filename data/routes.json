@@ -120,5 +120,16 @@
     "geometry_file": "geometry/dalya22.json",
     "description_file": "dalya22.html",
     "is_premium": false
+  },
+ {
+    "id": "oded25",
+    "name": "אל גב עודד (25 ק״מ)",
+    "region": "הר הנגב",
+    "distance_km": 25,
+    "elev_gain_m": 700,
+    "difficulty": 33,
+    "geometry_file": "geometry/oded25.json",
+    "description_file": "oded25.html",
+    "is_premium": false
   }
 ]
