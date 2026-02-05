@@ -131,5 +131,16 @@
     "geometry_file": "geometry/oded25.json",
     "description_file": "oded25.html",
     "is_premium": false
+  },
+ {
+    "id": "eshborn22",
+    "name": "אל סדקי צבירה (25 ק״מ)",
+    "region": "ערבה",
+    "distance_km": 22,
+    "elev_gain_m": 500,
+    "difficulty": 27,
+    "geometry_file": "geometry/eshborn22.json",
+    "description_file": "eshborn22.html",
+    "is_premium": false
   }
 ]
