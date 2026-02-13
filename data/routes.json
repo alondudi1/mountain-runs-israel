@@ -142,5 +142,16 @@
     "geometry_file": "geometry/eshborn22.json",
     "description_file": "eshborn22.html",
     "is_premium": false
+  },
+ {
+    "id": "amiaz22",
+    "name": "סובב מישור עמיעז (22 ק״מ)",
+    "region": "מדבר יהודה",
+    "distance_km": 22,
+    "elev_gain_m": 500,
+    "difficulty": 27,
+    "geometry_file": "geometry/amiaz22.json",
+    "description_file": "amiaz22.html",
+    "is_premium": false
   }
 ]
