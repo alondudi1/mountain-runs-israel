@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>מחולל תיאור מסלול - Mountain Runs Israel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* הגדרות בסיסיות */
+        body { 
+            font-family: sans-serif; 
+            display: flex; 
+            gap: 20px; 
+            padding: 20px; 
+            background: #f0f2f5; 
+            margin: 0;
+        }
+        .editor { 
+            width: 40%; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+            height: fit-content;
+        }
+        .preview-container { 
+            width: 60%; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        
+        /* התאמה לטלפונים ניידים ומסכים קטנים */
+        @media (max-width: 850px) {
+            body {
+                flex-direction: column; /* הצגת החלקים אחד מתחת לשני */
+                padding: 10px;
+            }
+            .editor, .preview-container {
+                width: 100%; /* רוחב מלא בטלפון */
+                box-sizing: border-box;
+            }
+            h2 { font-size: 1.5em; }
+        }
+
+        h2 { border-bottom: 2px solid #d32f2f; padding-bottom: 10px; margin-top: 0; }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        input, textarea { 
+            width: 100%; 
+            padding: 12px; /* הגדלת שטח הלחיצה לנייד */
+            margin-top: 5px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+            font-size: 16px; /* מונע זום אוטומטי מעצבן באייפון */
+        }
+        button { 
+            background: #d32f2f; 
+            color: white; 
+            border: none; 
+            padding: 15px 20px; 
+            margin-top: 20px; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            font-weight: bold; 
+            width: 100%; /* כפתור גדול ונוח בטלפון */
+            font-size: 1.1em;
+        }
+        button:hover { background: #b71c1c; }
+        .hint { font-size: 0.85em; color: #666; margin-top: 8px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<div class="editor">
+    <h2>עריכת מסלול</h2>
+    
+    <label>שם הקובץ (באנגלית):</label>
+    <input type="text" id="fileName" placeholder="למשל: bokek21">
+    
+    <label>כותרת ראשית:</label>
+    <input type="text" id="headerText" oninput="updatePreview()" placeholder="הזן כותרת...">
+
+    <label>חניה והגעה (Waze):</label>
+    <textarea id="parkingText" oninput="updatePreview()" rows="3"></textarea>
+
+    <label>לוגיסטיקה:</label>
+    <textarea id="logisticsText" oninput="updatePreview()" rows="3"></textarea>
+
+    <label>דגשים וטיפים:</label>
+    <textarea id="tipsText" oninput="updatePreview()" rows="5" placeholder="טיפ ראשון. טיפ שני."></textarea>
+    <p class="hint">פיצול שורות יתבצע רק בנקודה ורווח (. ) או ב-Enter. כך קישורים לא יישברו.</p>
+
+    <label>רשמים מהמסלול (לחץ לפתיחה):</label>
+    <textarea id="thoughtsText" oninput="updatePreview()" rows="6" placeholder="טקסט חופשי ארוך יותר..."></textarea>
+
+
+    <button onclick="downloadHTML()">הורד קובץ HTML</button>
+</div>
+
+<div class="preview-container">
+    <h2 style="border:none">תצוגה מקדימה:</h2>
+    <hr>
+    <div id="previewArea"></div>
+</div>
+
+<script>
+function linkify(text) {
+    if (!text) return "";
+    const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    let linkedText = text.replace(urlPattern, '<a href="$1" target="_blank" style="color: #d32f2f; text-decoration: underline;">$1</a>');
+    return linkedText.replace(/\n/g, '<br>');
+}
+
+function updatePreview() {
+    const header = document.getElementById('headerText').value || 'כותרת לדוגמה';
+    const parking = linkify(document.getElementById('parkingText').value || 'פרטי חניה...');
+    const logistics = linkify(document.getElementById('logisticsText').value || 'לוגיסטיקה...');
+    const tipsRaw = document.getElementById('tipsText').value || '';
+    const thoughtsRaw = document.getElementById('thoughtsText').value.trim();
+
+    const tipsArray = tipsRaw.split(/\.\s+|\n/).filter(t => t.trim() !== '');
+    
+    let tipsHTML = '';
+    tipsArray.forEach(t => {
+        let cleanTip = t.trim();
+        if (cleanTip && !cleanTip.endsWith('.') && !cleanTip.includes('http')) {
+            cleanTip += '.';
+        }
+        tipsHTML += `<li style="margin-bottom: 5px;">${linkify(cleanTip)}</li>`;
+    });
+
+    if (tipsHTML === '') tipsHTML = '<li>הזן דגשים...</li>';
+    const thoughtsSection = thoughtsRaw ? `
+<div style="background: #fcfcfc; padding: 15px; border-bottom: 1px solid #eee; margin-top: 20px;">
+    <details>
+        <summary style="margin: 0; color: #d32f2f; font-weight: 600; cursor: pointer; list-style: none;">
+            📝 הגיגים מהמסלול
+        </summary>
+        <div style="font-size: 0.95em; margin-top: 10px;">
+            ${linkify(thoughtsRaw)}
+        </div>
+    </details>
+</div>` : '';
+
+
+    const finalHTML = `
+<div style="color: #000; line-height: 1.6; font-family: sans-serif; direction: rtl; text-align: right;">
+    <p style="font-size: 1.1em; font-weight: 500; margin-bottom: 25px;">${header}</p>
+
+    <div style="background: #fcfcfc; padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 10px 0; color: #d32f2f;">📍 חניה והגעה</h4>
+        <div style="font-size: 0.95em;">${parking}</div>
+    </div>
+
+    <div style="background: #fcfcfc; padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px;">
+        <h4 style="margin: 0 0 10px 0; color: #d32f2f;">📋 לוגיסטיקה</h4>
+        <div style="font-size: 0.95em;">${logistics}</div>
+    </div>
+
+    <div style="padding: 15px;">
+        <h4 style="margin: 0 0 10px 0; color: #d32f2f;">💡 דגשים וטיפים</h4>
+        <ul style="margin: 0; padding-right: 20px; font-size: 0.95em;">
+            ${tipsHTML}
+        </ul>
+        </div>
+
+    ${thoughtsSection}
+</div>`;
+
+
+    document.getElementById('previewArea').innerHTML = finalHTML;
+    return finalHTML;
+}
+
+function downloadHTML() {
+    const content = updatePreview();
+    const fileName = document.getElementById('fileName').value || 'route';
+    const blob = new Blob([content], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName + '.html';
+    a.click();
+}
+
+updatePreview();
+</script>
+
+</body>
+</html>
