@@ -153,5 +153,16 @@
     "geometry_file": "geometry/amiaz22.json",
     "description_file": "amiaz22.html",
     "is_premium": false
+  },
+ {
+    "id": "saraf26",
+    "name": "גב שרף וטרה אינקוגניטה (26 ק״מ)",
+    "region": "מדבר יהודה",
+    "distance_km": 26,
+    "elev_gain_m": 700,
+    "difficulty": 33,
+    "geometry_file": "geometry/saraf26.json",
+    "description_file": "saraf26.html",
+    "is_premium": false
   }
 ]
