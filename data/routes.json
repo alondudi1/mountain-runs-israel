@@ -164,5 +164,16 @@
     "geometry_file": "geometry/saraf26.json",
     "description_file": "saraf26.html",
     "is_premium": false
+  },
+ {
+    "id": "hava22",
+    "name": "סדקים, קשת, מעיין נידח (22 ק״מ)",
+    "region": "נגב",
+    "distance_km": 22,
+    "elev_gain_m": 700,
+    "difficulty": 29,
+    "geometry_file": "geometry/hava22.json",
+    "description_file": "hava22.html",
+    "is_premium": false
   }
 ]
