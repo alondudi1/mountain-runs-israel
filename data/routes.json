@@ -175,5 +175,16 @@
     "geometry_file": "geometry/hava22.json",
     "description_file": "hava22.html",
     "is_premium": false
+  },
+ {
+    "id": "ovil20",
+    "name": "נופי ירח בצוקי אוביל (22 ק״מ)",
+    "region": "נגב דרומי",
+    "distance_km": 20,
+    "elev_gain_m": 400,
+    "difficulty": 24,
+    "geometry_file": "geometry/ovil20.json",
+    "description_file": "ovil20.html",
+    "is_premium": false
   }
 ]
