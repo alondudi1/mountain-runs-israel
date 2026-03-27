@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-M7PK7VG6XE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+  
+    gtag('config', 'G-M7PK7VG6XE');
+  </script>
+  
+  <title>Mountain Runs Israel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  
+  <style>
+
+    /* עיצוב כפתור עזרה זהה לכפתור השכבות */
+    .leaflet-control-help {
+      background-color: #fff !important;
+      width: 34px !important;  /* גודל כפתור תקני ב-Leaflet */
+      height: 34px !important; /* גודל כפתור תקני ב-Leaflet */
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 4px !important; /* פינות מעוגלות זהות */
+      box-shadow: 0 1px 5px rgba(0,0,0,0.4) !important;
+      text-decoration: none;
+      font-size: 18px;
+      color: #333;
+      border: none !important;
+    }
+
+    .leaflet-control-help:hover { background-color: #f4f4f4 !important; }
+
+    /* סידור אופקי של הכפתורים בפינה הימנית */
+    .leaflet-top.leaflet-right {
+      display: flex !important;
+      flex-direction: row-reverse !important;
+      gap: 12px !important; /* רווח נקי בין הכפתורים */
+      margin-right: 12px !important;
+      margin-top: 12px !important;
+    }
+
+    /* מניעת שוליים כפולים שמפריעים ליישור */
+    .leaflet-top.leaflet-right .leaflet-control { 
+      margin: 0 !important; 
+      border: none !important;
+      box-shadow: none !important; /* ביטול צל כפול */
+    }
+
+    /* עיצוב חלון העזרה (Modal) */
+    .modal-index {
+      display: none;
+      position: fixed;
+      z-index: 3000;
+      left: 0; top: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      align-items: center; justify-content: center;
+      direction: rtl;
+    }
+    .modal-index-content {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 85%;
+      position: relative;
+      text-align: right;
+    }
+    .close-modal-index { position: absolute; left: 15px; top: 10px; font-size: 24px; cursor: pointer; color: #aaa; }
+    .close-guide-btn { 
+      width: 100%; background: #d32f2f; color: white; border: none; 
+      padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px;
+    }
+    
+    html, body { height: 100%; margin: 0; font-family: Arial, sans-serif; overflow: hidden; }
+    #app { display: flex; height: 100vh; flex-direction: row-reverse; }
+    #map { flex: 1; }
+
+    #sidebar {
+      width: 320px;
+      border-left: 1px solid #ddd;
+      padding: 10px;
+      
+      /* --- שיפורי גלילה --- */
+      overflow-y: auto; /* מאפשר גלילה */
+      -webkit-overflow-scrolling: touch; /* גלילה חלקה באייפון */
+      overscroll-behavior: contain; /* מונע גלילה של כל העמוד */
+      
+      background: #fff;
+      box-sizing: border-box;
+      
+      /* הגדרות לפיירפוקס */
+      scrollbar-width: thin;
+      scrollbar-color: #bbb transparent;
+    }
+
+    /* --- עיצוב פס גלילה (כרום, ספארי, אייפון) --- */
+    #sidebar::-webkit-scrollbar {
+      width: 6px; /* רוחב הפס */
+    }
+    #sidebar::-webkit-scrollbar-track {
+      background: transparent; 
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+      background-color: rgba(0,0,0,0.2); /* צבע אפור חצי שקוף */
+      border-radius: 4px; /* פינות עגולות */
+      border: 2px solid transparent; 
+      background-clip: content-box;
+    }
+
+    /* התוספת היחידה ב-CSS: הגדרת גודל ללוגו */
+    .sidebar-logo {
+      width: 100%;
+      height: auto;
+      display: block;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+
+    .region-title {
+      font-weight: 800;
+      margin: 14px 0 6px;
+      opacity: .85;
+    }
+
+    .route-item {
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .route-item:hover {
+      background: #f5f5f5;
+    }
+
+    .status {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+
+    /* --- התאמות לנייד --- */
+    /* --- התאמות לנייד: חלוקה שווה 50/50 --- */
+    @media (max-width: 800px) {
+      /* הגדרת המיכל הראשי לגובה המסך המדויק */
+      #app { 
+        flex-direction: column; 
+        height: 100dvh; 
+        width: 100%;
+      }
+      
+      /* המפה: תופסת בדיוק חצי מסך */
+      #map { 
+        height: 50dvh !important; 
+        flex: none; /* מונע ממנה להתרחב או להתכווץ */
+        z-index: 1;
+      }
+      
+      /* רשימת המסלולים: תופסת את החצי השני */
+      #sidebar { 
+        width: 100%; 
+        height: 50dvh !important; 
+        
+        border-left: none; 
+        border-top: 2px solid #ddd; /* קו הפרדה ברור */
+        
+        /* שיפורי גלילה בתוך הרשימה */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 100px !important; /* רווח בסוף כדי שהמסלול האחרון לא יוסתר */
+      }
+      
+      /* הקטנת הלוגו */
+      .sidebar-logo {
+        width: auto;
+        max-height: 60px; /* הקטנתי עוד קצת כדי לחסוך מקום בחצי המסך */
+        margin: 0 auto 10px auto; 
+      }
+      
+      /* וידוא שכפתורי המפה לא נדבקים לקצה העליון */
+      .leaflet-top {
+        top: 10px !important;
+      }
+    }
+    .leaflet-top.leaflet-left .leaflet-control {
+      margin-bottom: 6px;
+    }
+    /* ===== Preview Card ===== */
+    .route-preview {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 320px;
+      max-width: calc(100% - 32px);
+    
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      padding: 12px;
+    
+      z-index: 1200;
+    
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.35s ease, opacity 0.25s ease;
+    }
+    
+    .route-preview.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .route-preview.hidden { display: none; }
+    
+    .rp-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    
+    .rp-title { font-weight: 800; font-size: 15px; margin-bottom: 4px; }
+    .rp-meta  { font-size: 12px; color: #666; line-height: 1.3; }
+    
+    .rp-close {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 20px;
+      padding: 4px 6px;
+      color: #444;
+    }
+    
+    .rp-btn {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+    
+      margin-top: 10px;
+      padding: 10px 12px;
+    
+      background: #d32f2f;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+      text-align: center;
+    
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+    }
+
+    .rp-btn:hover { background: #b71c1c; }
+    .rp-meta:empty { display: none; }
+
+    /* --- עיצוב טופס צור קשר (Contact Us) --- */
+    .contact-modal {
+      display: none; /* מוסתר כברירת מחדל */
+      position: fixed;
+      z-index: 4000; /* מעל הכל */
+      left: 0; top: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center;
+      direction: rtl;
+    }
+
+    .contact-content {
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 360px;
+      position: relative;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      text-align: right;
+    }
+
+    .contact-title { font-size: 20px; font-weight: 800; color: #333; margin-bottom: 15px; text-align: center; }
+    
+    .contact-form label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #555; }
+    
+    .contact-form input, 
+    .contact-form textarea,
+    .contact-form select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    .btn-send-email {
+      width: 100%;
+      background-color: #007bff; /* כחול */
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn-send-email:hover { background-color: #0056b3; }
+
+    .close-contact { position: absolute; left: 15px; top: 15px; font-size: 24px; cursor: pointer; color: #999; }
+
+    /* --- מסך פתיחה אטמוספרי (Splash Screen) --- */
+    .welcome-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      /* התמונה שלך עם שכבת כיסוי כהה לקריאות מקסימלית */
+      background: linear-gradient(rgba(0,0,0,0.75), rgba(0,0,0,0.75)), url('images/IMG_9648.jpeg');
+      background-size: cover;
+      background-position: center;
+      z-index: 5000; /* מעל הכל */
+      display: flex; /* יוסתר אוטומטית ע"י הסקריפט אם צריך */
+      align-items: center; justify-content: center;
+      direction: rtl;
+      transition: opacity 0.6s ease;
+    }
+
+    .welcome-content {
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      color: #fff;
+      padding: 20px;
+      animation: fadeIn 1s ease-out;
+    }
+
+    /* כותרות וטקסטים */
+    .welcome-title { 
+      font-size: 32px; 
+      font-weight: 800; 
+      margin-bottom: 5px; 
+      color: #fff; 
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .welcome-subtitle { 
+      font-size: 18px; 
+      font-weight: 300; 
+      margin-bottom: 30px; 
+      color: #ddd; 
+      letter-spacing: 1px;
+    }
+    
+    .welcome-body { 
+      font-size: 16px; 
+      line-height: 1.6; 
+      margin-bottom: 30px; 
+      color: #f0f0f0;
+      background: rgba(255,255,255,0.1); /* רקע שקוף עדין מאוד לקריאות */
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(5px); /* טשטוש עדין מאחורי הטקסט */
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .welcome-signature {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+      color: #fff;
+    }
+
+    /* כפתור כניסה */
+    .btn-enter {
+      background: white;
+      color: #333;
+      border: none;
+      padding: 12px 35px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    }
+    .btn-enter:hover {
+      transform: scale(1.05);
+      background: #f0f0f0;
+      box-shadow: 0 0 30px rgba(255,255,255,0.5);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div id="welcomeScreen" class="welcome-overlay" style="display:none;"> <div class="welcome-content">
+    
+    <h1 class="welcome-title">ברוכים הבאים לבנק המסלולים</h1>
+    <div class="welcome-subtitle">הצצה למאגר האישי שלי לריצת שטח</div>
+    
+    <div class="welcome-body">
+      ריכזתי כאן את המסלולים האהובים עלי מתוך רצון לשתף ידע עם הקהילה.<br>
+      המידע המוצג הוא להתרשמות ולתכנון בלבד. השטח דינמי ומשתנה, ולכן השימוש בקבצים הוא באחריות המשתמש בלבד.
+      
+      <span class="welcome-signature">
+        נתראה בשבילים,<br>
+        [דודי אלון]
+      </span>
+    </div>
+
+    <button class="btn-enter" onclick="closeWelcome()">כניסה למפה</button>
+  </div>
+</div>
+  
+<div id="app">
+  <div id="map"></div>
+  <div id="sidebar">
+    <img src="IMG_9648.jpeg" alt="Run-IL Trail Bank" class="sidebar-logo">
+    
+    <div style="font-weight:800; margin-bottom:8px;">מסלולים</div>
+    <div id="routesList"></div>
+    <div style="margin-top: 20px; text-align: center; border-top: 1px solid #eee; padding-top: 15px;">
+      <button onclick="openContact()" style="background:none; border:none; color:#666; cursor:pointer; font-weight:bold; text-decoration:underline; font-size:14px;">
+         צור קשר 💬
+      </button>
+    </div>
+    <div class="status" id="status">טוען…</div>
+  </div>
+</div>
+
+  <div id="routePreview" class="route-preview hidden">
+    <div class="rp-top">
+      <div class="rp-text">
+        <div id="previewTitle" class="rp-title"></div>
+        <div id="previewMeta" class="rp-meta"></div>
+      </div>
+      <button id="previewClose" class="rp-close" title="סגור">×</button>
+    </div>
+  
+    <a id="previewBtn" class="rp-btn" href="#">לפרטי המסלול →</a>
+  </div>
+
+  <div id="navHelpModal" class="modal-index">
+    <div class="modal-index-content">
+      <span class="close-modal-index" onclick="closeNavHelp()">&times;</span>
+      <h3 style="color:#d32f2f; margin-top:0;">הנחיות לשימוש:</h3>
+      <p style="line-height: 1.5; color: #333;">
+        נווט בבנק המסלולים על ידי <b>גלילה וזום במפה</b> או על ידי <b>בחירת מסלול בתפריט המסלולים</b>.
+      </p>
+      <p style="line-height: 1.5; color: #333;">
+        בחר מסלול ועבור לדף <b>פרטי המסלול</b> שם תמצא פירוט נוסף: בין היתר הערות לניווט, ואפשרות ל<b>הורדת קובץ GPX</b>.
+      </p>
+     <p style="line-height: 1.5; color: #333;"> בדפי המסלול לחץ על אייקון <b>חץ במטרה</b> לשם איפוס המפה למיקמוך בשטח 
+     </p>
+      <button class="close-guide-btn" onclick="closeNavHelp()">הבנתי, תודה!</button>
+    </div>
+  </div>
+
+<script>
+
+  /* --- ניהול מסך פתיחה חכם (פעם ב-30 יום) --- */
+  
+  document.addEventListener("DOMContentLoaded", function() {
+      const welcomeScreen = document.getElementById('welcomeScreen');
+      const lastSeenStr = localStorage.getItem('welcomeSeenDate');
+      const now = new Date().getTime();
+      const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000; // חישוב 30 יום במילישניות
+
+      // האם להציג את המסך?
+      // כן, אם: אין תאריך שמור (פעם ראשונה) או שעברו 30 יום מאז הפעם האחרונה
+      if (!lastSeenStr || (now - parseInt(lastSeenStr) > thirtyDaysInMs)) {
+          welcomeScreen.style.display = 'flex';
+      } else {
+          // אחרת, הסתר (למרות שמוגדר none ב-HTML, ליתר ביטחון)
+          welcomeScreen.style.display = 'none';
+      }
+  });
+
+  function closeWelcome() {
+      const welcomeScreen = document.getElementById('welcomeScreen');
+      
+      // 1. אנימציית היעלמות
+      welcomeScreen.style.opacity = '0';
+      
+      // 2. שמירת הזמן הנוכחי בזיכרון הדפדפן
+      localStorage.setItem('welcomeSeenDate', new Date().getTime().toString());
+
+      // 3. הסרה מהמסך אחרי סיום האנימציה
+      setTimeout(() => {
+          welcomeScreen.style.display = 'none';
+      }, 600);
+  }
+  
+(async function () {
+
+  const statusEl = document.getElementById('status');
+  const listEl   = document.getElementById('routesList');
+
+  // ===== Preview Card refs =====
+  const preview = document.getElementById('routePreview');
+  const titleEl = document.getElementById('previewTitle');
+  const metaEl  = document.getElementById('previewMeta');
+  const btnEl   = document.getElementById('previewBtn');
+  const closeEl = document.getElementById('previewClose');
+  
+  function hidePreview() {
+    preview.classList.remove('show');
+    setTimeout(() => preview.classList.add('hidden'), 250);
+  }
+  
+  function showPreview(routeId, routes) {
+    const r = routes.find(x => x.id === routeId);
+    if (!r) return;
+  
+    titleEl.textContent = r.name || routeId;
+  
+    btnEl.href = `route.html?id=${encodeURIComponent(routeId)}`;
+  
+    preview.classList.remove('hidden');
+    requestAnimationFrame(() => preview.classList.add('show'));
+  }
+  
+  closeEl.addEventListener('click', hidePreview);
+
+  window.openNavHelp = function() { document.getElementById('navHelpModal').style.display = 'flex'; };
+  window.closeNavHelp = function() { document.getElementById('navHelpModal').style.display = 'none'; };
+
+  if (!window.L) {
+    statusEl.textContent = 'Leaflet לא נטען';
+    return;
+  }
+
+  // ===== מפה =====
+  const ISRAEL_VIEW = { center: [31.8, 35.0], zoom: 8 };
+  const map = L.map('map').setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+  map.on('click', () => hidePreview());
+
+  // ===== כפתור חזרה לתצוגת פתיחה =====
+  const backControl = L.control({ position: 'topleft' });
+  backControl.onAdd = function () {
+    const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+    const btn = L.DomUtil.create('a', '', container);
+    btn.href = '#';
+    btn.title = 'חזרה לכל ישראל';
+    btn.innerHTML = '↺';
+    btn.style.fontSize = '18px';
+    btn.style.lineHeight = '30px';
+    btn.style.textAlign = 'center';
+    btn.style.width = '30px';
+    btn.style.height = '30px';
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.on(btn, 'click', (e) => {
+      L.DomEvent.preventDefault(e);
+      map.setView(ISRAEL_VIEW.center, ISRAEL_VIEW.zoom);
+    });
+    return container;
+  };
+  backControl.addTo(map);
+
+  // ===== הגדרת שכבות המפה (Base Layers) =====
+  
+  // 1. מפת סימון שבילים ישראל (IHM) - זו המפה הטופוגרפית לישראל
+  const ihm = L.tileLayer('https://israelhiking.osm.org.il/Hebrew/Tiles/{z}/{x}/{y}.png', {
+    maxZoom: 16,
+    attribution: '© Israel Hiking Map'
+  }).addTo(map);
+
+  // 2. מפת רחובות סטנדרטית
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  });
+
+  // 3. תצלום לוויין (Esri World Imagery)
+  const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri'
+  });
+
+  // 4. מפה טופוגרפית עולמית (OpenTopoMap)
+  const topo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    maxZoom: 17,
+    attribution: 'Map data: © OpenTopoMap'
+  });
+
+  const baseLayers = {
+    'סימון שבילים (IHM)': ihm,
+    'מפת רחובות (OSM)': osm,
+    'תצלום לוויין (לוויין)': satellite,
+    'טופוגרפיה עולמית (Topo)': topo
+  };
+
+  // הוספת התפריט למפה בפינה הימנית
+  L.control.layers(baseLayers, null, { position: 'topright' }).addTo(map);
+  // יצירת פקד עזרה מותאם אישית
+  const HelpControl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd: function () {
+      // יצירת הכפתור ישירות כפקד (ללא container עוטף שמייצר מסגרת כפולה)
+      const button = L.DomUtil.create('a', 'leaflet-control leaflet-control-help');
+      
+      button.innerHTML = '❓';
+      button.href = '#';
+      button.title = 'עזרה';
+      
+      // מניעת לחיצה על המפה שמתחת לכפתור
+      L.DomEvent.disableClickPropagation(button);
+      
+      button.onclick = (e) => { 
+        e.preventDefault(); 
+        window.openNavHelp(); 
+      };
+      return button;
+    }
+  });
+  map.addControl(new HelpControl());
+
+  const routesLayer = L.layerGroup().addTo(map);
+
+  async function loadJSON(path) {
+    const res = await fetch(path, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Failed to load ${path}`);
+    return res.json();
+  }
+
+  let routes;
+  try {
+    routes = await loadJSON('data/routes.json');
+  } catch (e) {
+    statusEl.textContent = e.message;
+    return;
+  }
+
+  statusEl.textContent = `נטענו ${routes.length} מסלולים`;
+
+  const routeMap = {};
+  const DEFAULT_STYLE  = { weight: 4, opacity: 0.85 };
+  const SELECTED_STYLE = { weight: 7, opacity: 1.0 };
+  let selectedRouteId = null;
+  
+  function selectRoute(routeId, doFit = false) {
+    const line = routeMap[routeId];
+    if (!line) return;
+    if (selectedRouteId && routeMap[selectedRouteId]) {
+      routeMap[selectedRouteId].setStyle(DEFAULT_STYLE);
+    }
+    selectedRouteId = routeId;
+    line.setStyle(SELECTED_STYLE);
+    line.bringToFront();
+    if (doFit) {
+      map.fitBounds(line.getBounds(), { padding: [30, 30] });
+    }
+  }
+
+  for (const r of routes) {
+    try {
+      const geom = await loadJSON(`data/${r.geometry_file}`);
+      if (!geom.coordinates) continue;
+      const latlngs = geom.coordinates.map(([lon, lat]) => [lat, lon]);
+      if (latlngs.length < 2) continue;
+
+      const line = L.polyline(latlngs, { weight: 4, opacity: 0.85 }).addTo(routesLayer);
+      line.bindTooltip(r.name, { sticky: true });
+      routeMap[r.id] = line;
+      line.on('click', (e) => {
+        L.DomEvent.stopPropagation(e); 
+        selectRoute(r.id, true);
+        showPreview(r.id, routes);
+      });
+    } catch (e) {
+      console.warn('Route failed:', r.id, e.message);
+    }
+  }
+
+  const byRegion = {};
+  routes.forEach(r => {
+    const region = r.region || 'לא משויך';
+    (byRegion[region] = byRegion[region] || []).push(r);
+  });
+
+  Object.keys(byRegion).sort((a, b) => a.localeCompare(b, 'he')).forEach(region => {
+    const title = document.createElement('div');
+    title.className = 'region-title';
+    title.textContent = region;
+    listEl.appendChild(title);
+    byRegion[region].forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'route-item';
+      item.textContent = r.name;
+      item.onclick = () => {
+        selectRoute(r.id, true);
+        showPreview(r.id, routes);
+      };
+      listEl.appendChild(item);
+    });
+  });
+
+})();
+
+  /* --- ניהול חלון צור קשר --- */
+  
+  function openContact() {
+    document.getElementById('contactModal').style.display = 'flex';
+  }
+  
+  function closeContact() {
+    document.getElementById('contactModal').style.display = 'none';
+  }
+
+  // סגירה בלחיצה מחוץ לחלון (על הרקע הכהה)
+  // הערה: אם כבר יש לך window.onclick בקוד (למשל למודאלים אחרים), 
+  // כדאי לאחד אותם, אבל הקוד הזה יעבוד גם לבד אם הוא האחרון
+  window.addEventListener('click', function(event) {
+    const contactModal = document.getElementById('contactModal');
+    if (event.target == contactModal) {
+      contactModal.style.display = "none";
+    }
+  });
+  
+</script>
+
+  <div id="contactModal" class="contact-modal">
+  <div class="contact-content">
+    <span class="close-contact" onclick="closeContact()">&times;</span>
+    <div class="contact-title">יש לך שאלה או המלצה?</div>
+    
+    <form action="https://formsubmit.co/alondudi1@gmail.com" method="POST" class="contact-form">
+      
+      <input type="hidden" name="_subject" value="פנייה חדשה מאתר המסלולים!">
+      <input type="hidden" name="_captcha" value="false">
+      <label>איך קוראים לך?</label>
+      <input type="text" name="שם" placeholder="השם שלך..." required>
+
+      <label>איך לחזור אליך? (מייל או טלפון)</label>
+      <input type="text" name="פרטי_קשר" placeholder="מייל או נייד" required>
+
+      <label>נושא הפנייה:</label>
+      <select name="נושא">
+        <option value="שאלה כללית">שאלה כללית</option>
+        <option value="דיווח על תקלה">דיווח על תקלה / טעות</option>
+        <option value="המלצה למסלול">יש לי המלצה למסלול!</option>
+        <option value="סתם לפרגן">סתם לפרגן ❤️</option>
+      </select>
+
+      <label>ההודעה שלך:</label>
+      <textarea name="תוכן_ההודעה" rows="4" placeholder="כתוב כאן את ההודעה..." required></textarea>
+
+      <button type="submit" class="btn-send-email">
+        שליחת הודעה ✉️
+      </button>
+    </form>
+  </div>
+</div>
+  
+</body>
+</html>
