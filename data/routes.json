@@ -197,5 +197,16 @@
     "geometry_file": "geometry/hadav24.json",
     "description_file": "hadav24.html",
     "is_premium": false
+  },
+ {
+    "id": "cabir21",
+    "name": "אל בור כביר והר עקרב (21 ק״מ)",
+    "region": "הר הנגב",
+    "distance_km": 21,
+    "elev_gain_m": 650,
+    "difficulty": 27,
+    "geometry_file": "geometry/cabir21.json",
+    "description_file": "cabir21.html",
+    "is_premium": false
   }
 ]
